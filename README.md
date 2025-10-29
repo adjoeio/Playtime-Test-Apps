@@ -1,1 +1,1 @@
-# Studio Sample Apps
+Refer to adjoe documentation for integration steps: https://docs.adjoe.io/playtime-studio/fgRzARfCQlvPFiqfw2jN
