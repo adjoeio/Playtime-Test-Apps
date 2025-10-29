@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PlaytimeStudio</string>
+    <string name="title_activity_campaign_details">CampaignDetails</string>
+</resources>
