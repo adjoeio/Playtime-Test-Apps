@@ -54,13 +54,13 @@ extension Game {
         var bonusLevels: [GameLevel] = []
         
         // Append Cashback
-        if (campaign.cashbackConfig != nil) {
+        if (campaign.eventConfig?.cashbackReward != nil) {
             bonusLevels.append(GameLevel(
                 taskDescription: "Make in-app purches",
-                points: Int(campaign.cashbackConfig?.maxLimitPerCampaignCoins ?? 0.0),
+                points: Int(campaign.eventConfig?.cashbackReward?.maxLimitPerCampaignCoins ?? 0.0),
                 rewardedAt: nil,
                 reward: nil,
-                cashback: campaign.cashbackConfig
+                cashback: campaign.eventConfig?.cashbackReward
             ))
         }
         
@@ -122,8 +122,8 @@ extension Game {
     }
     
     static func getOptions() throws -> PlaytimeOptions {
-        let options = try PlaytimeOptionsBuilder()
-            .setUserId("testuserid1234hari")
+        let options = PlaytimeOptionsBuilder()
+            .setUserId(Config.userId.rawValue)
             .setUserProfile(
                 PlaytimeUserProfileBuilder()
                     .setGender(PlaytimeGender.male)

@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Modal, Text, View } from "react-native";
-import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/PlaytimeStudio";
+import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
 import {
     campaignIsExpired,
     campaignIsInstalled,
@@ -14,6 +14,7 @@ import RewardsSection from "./RewardsSection";
 import { spacingStyles, textStyles } from "../../../util/style";
 import MultiplierSection from "./MultipliersSection";
 import BonusRewardsSection from "./BonusRewardsSection";
+import { PlaytimeStudio } from "react-native-adjoe-sdk";
 
 type CampaignDetailsProps = {
     clickedCampaign: PlaytimeCampaign | null;
@@ -57,6 +58,15 @@ export default function CampaignDetails({
         return levels;
     }, [clickedCampaign]);
 
+    const openChatbot = useCallback(() => {
+        if (clickedCampaign == null) {
+            return;
+        }
+
+        PlaytimeStudio.openChatbot(clickedCampaign)
+            .catch((err) => console.error(err));
+    }, [clickedCampaign]);
+
     return (
         <Modal
             visible={!!clickedCampaign}
@@ -85,10 +95,12 @@ export default function CampaignDetails({
                         ) : null}
 
                         <View style={[spacingStyles.marginTop]}>
-                            <Button
-                                title="Go Back"
-                                onPress={() => setClickedCampaign(null)}
-                            />
+                            <Button title="Go Back" onPress={() => setClickedCampaign(null)} />
+                            <View style={[spacingStyles.marginTop]}>
+                                <Button
+                                    title="Need help with something? Ask our chatbot!" type="danger" onPress={openChatbot}
+                                />
+                            </View>
                         </View>
                     </View>
                 </SafeArea>

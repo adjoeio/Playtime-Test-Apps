@@ -8,10 +8,12 @@ object Util {
     const val TAG: String = "PlaytimeStudio"
 
     @JvmStatic
-    fun logVisible(activity: Activity, message: String) {
-        Log.i(TAG, message)
-        activity.runOnUiThread {
-            Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+    fun logVisible(activity: Activity, message: String?) {
+        message?.let {
+            Log.i(TAG, message)
+            activity.runOnUiThread {
+                Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+            }
         }
     }
 

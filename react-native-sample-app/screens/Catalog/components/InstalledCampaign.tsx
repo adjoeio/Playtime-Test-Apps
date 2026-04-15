@@ -4,7 +4,7 @@ import { PlaytimeStudio } from "react-native-adjoe-sdk";
 import { flexStyles, spacingStyles, textStyles } from "../../../util/style";
 import { getRewardedCoins, getTotalReward } from "../../../util/campaignsHelper";
 import ProgressBar from "../../../components/ProgressBar";
-import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/PlaytimeStudio";
+import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
 import Button from "../../../components/Button";
 
 type InstalledCampaignProps = {
@@ -42,10 +42,15 @@ export default function InstalledCampaign({
 
     const onPlayNowClicked = useCallback(async () => {
         try {
-            await PlaytimeStudio.openInstalledCampaign(campaign)
+            await PlaytimeStudio.openInstalledCampaign(campaign);
         } catch (err) {
             console.error(err);
         }
+    }, [campaign]);
+
+    const deeplinkCampaign = useCallback(async () => {
+        PlaytimeStudio.showAppDetails(campaign)
+            .catch((err) => console.error(err));
     }, [campaign]);
 
     return (
@@ -82,6 +87,8 @@ export default function InstalledCampaign({
                         </View>
 
                         <Button title="Play Now" onPress={onPlayNowClicked} />
+
+                        <Button type="link" title="Deeplink to WebCatalog" onPress={deeplinkCampaign} />
                     </View>
                 </View>
             </View>

@@ -14,6 +14,7 @@ final class GameViewModel: ObservableObject {
     var clickedCampaigns: ClickedCampaigns = ClickedCampaigns(campaigns: [])
     // Used to store clicke catalog games and put them to "In Progress"
     var clickedCatalogGames: IdentifiedArrayOf<Game> = []
+    var didSetOptions: Bool = false
     
     func saveClickedCampaigns() {
         do {
@@ -84,9 +85,13 @@ final class GameViewModel: ObservableObject {
     }
     
     func onClickPlayGame(_ game: Game) async {
-        if let _ = game.campaign.installedAt {
+        guard let campaign = game.campaign else {
+            return
+        }
+        
+        if let _ = campaign.installedAt {
             do {
-                try await PlaytimeStudio.openInstalledCampaign(campaign: game.campaign)
+                try await PlaytimeStudio.openInstalledCampaign(campaign: campaign)
             } catch {
                 print("Error opening installed game: \(error)")
             }
@@ -94,7 +99,7 @@ final class GameViewModel: ObservableObject {
         }
         
         do {
-            try await PlaytimeStudio.openInStore(campaign: game.campaign)
+            try await PlaytimeStudio.openInStore(campaign: campaign)
         } catch {
             print("Error opening store: \(error)")
         }
@@ -141,9 +146,27 @@ final class GameViewModel: ObservableObject {
         ) == checkValue
     }
     
+    func setPlaytimeOptions() async {
+        do {
+            try await Playtime.setPlaytimeOptions(
+                options: PlaytimeOptionsBuilder()
+                    .setUserId(Config.userId.rawValue)
+                    .setSDKHash(Config.sdkHash.rawValue)
+                    .build()
+            )
+            didSetOptions = true
+        } catch {
+            print("Error setting options: \(error)")
+        }
+    }
+    
     func fetchCampaigns() async {
         if (loadedCatalog) {
             return
+        }
+        
+        if !didSetOptions {
+            await setPlaytimeOptions()
         }
         
         loadingCatalog = true
@@ -195,5 +218,35 @@ final class GameViewModel: ObservableObject {
         }
         
         loadingInProgress = false
+    }
+    
+    func openChatbot() {
+        Task {
+            do {
+                try await PlaytimeStudio.openChatbot(campaign: nil)
+            } catch {
+                print("Error opening chatbot: \(error)")
+            }
+        }
+    }
+    
+    func openChatbotForCampaign(campaign: PlaytimeCampaign) {
+        Task {
+            do {
+                try await PlaytimeStudio.openChatbot(campaign: campaign)
+            } catch {
+                print("Error opening chatbot: \(error)")
+            }
+        }
+    }
+
+    func deeplinkInstalledApps() {
+        Task {
+            do {
+                try await PlaytimeStudio.showInstalledApps()
+            } catch {
+                print("Error showing installed apps: \(error)")
+            }
+        }
     }
 }

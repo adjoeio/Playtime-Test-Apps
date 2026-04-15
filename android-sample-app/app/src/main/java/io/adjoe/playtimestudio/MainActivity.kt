@@ -1,5 +1,6 @@
 package io.adjoe.playtimestudio
 
+import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,6 +24,10 @@ import io.adjoe.playtimestudio.ui.theme.PlaytimeStudioTheme
 import io.adjoe.playtimestudio.viewModels.CampaignDetailsViewModel
 import io.adjoe.playtimestudio.viewModels.CatalogueViewModel
 import io.adjoe.playtimestudio.viewModels.OnboardingViewModel
+import io.adjoe.sdk.studio.PlaytimeEngagementType
+import io.adjoe.sdk.studio.PlaytimeExecuteEngagementListener
+import io.adjoe.sdk.studio.PlaytimeResponseError
+import io.adjoe.sdk.studio.PlaytimeStudio
 
 class MainActivity : ComponentActivity() {
     private lateinit var player: Player
@@ -94,6 +99,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 },
                                 baseContext,
+                                activity = this@MainActivity
                             )
                         } else {
                             Catalogue(
@@ -102,6 +108,22 @@ class MainActivity : ComponentActivity() {
                                 catalogueViewModel,
                                 openCampaignDetails = {
                                     campaignDetailsViewModel.activeCampaign = it
+
+                                    PlaytimeStudio.executeEngagement(
+                                        context,
+                                        it,
+                                        PlaytimeEngagementType.ENGAGED,
+                                        object : PlaytimeExecuteEngagementListener {
+                                            override fun onAlreadyEngaging() {
+                                                Util.logVisible(context as Activity, "On already engaging ${it.appName}")
+                                            }
+
+                                            override fun onError(error: PlaytimeResponseError?) {
+                                                Util.logVisible(context as Activity, "Error executing engagement for ${it.appName}: ${error?.error?.message}")
+                                            }
+
+                                            override fun onFinished() { }
+                                        })
                                 }
                             )
                         }

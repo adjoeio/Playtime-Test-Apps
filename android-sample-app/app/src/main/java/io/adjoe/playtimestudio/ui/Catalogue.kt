@@ -51,6 +51,7 @@ fun Catalogue(
     }
 
     Column(modifier = modifier) {
+        // Catalog Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -65,6 +66,7 @@ fun Catalogue(
             )
         }
 
+        // Catalog Tabs
         Row(
             Modifier
                 .fillMaxWidth()
@@ -107,6 +109,7 @@ fun Catalogue(
             }
         }
 
+        // Catalog Campaigns
         LazyColumn(
             Modifier
                 .fillMaxSize()
@@ -177,5 +180,23 @@ fun Catalogue(
                 }
             }
         }
+
+        // Catalog Support
+        DangerButton(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            text = "Need help with something? Ask our chatbot!",
+            onClick = {
+                viewModel.openChatbot(context as Activity)
+            }
+        )
+
+        // Catalog Deeplink
+        LinkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Deeplink to Installed Campaigns",
+            onClick = {
+                viewModel.showInstalledApps(context as Activity)
+            }
+        )
     }
 }

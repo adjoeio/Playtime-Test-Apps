@@ -22,8 +22,6 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>NSUserTrackingUsageDescription</key>
-    <string>This app uses device identifiers to track marketing attribution and app usage.  Your data is kept confidential and is not shared with any 3rd parties or advertising partners.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -35,6 +33,8 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This app uses device identifiers to track marketing attribution and app usage.  Your data is kept confidential and is not shared with any 3rd parties or advertising partners.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

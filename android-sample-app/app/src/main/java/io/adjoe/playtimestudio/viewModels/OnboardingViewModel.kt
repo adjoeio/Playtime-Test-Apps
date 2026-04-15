@@ -6,16 +6,17 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import io.adjoe.playtimestudio.Config
 import io.adjoe.playtimestudio.Util
 import io.adjoe.sdk.Playtime
+import io.adjoe.sdk.PlaytimeOptions
+import io.adjoe.sdk.PlaytimeOptionsListener
 import io.adjoe.sdk.internal.SharedPreferencesRepository
 import io.adjoe.sdk.studio.PlaytimePermissions
 import io.adjoe.sdk.studio.PlaytimePermissionsListener
 import io.adjoe.sdk.studio.PlaytimePermissionsResponse
 import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
-import java.util.Timer
-import java.util.TimerTask
 
 class OnboardingViewModel() : ViewModel() {
     var playtimeInit by mutableStateOf(false)
@@ -27,36 +28,37 @@ class OnboardingViewModel() : ViewModel() {
     var onboardingStep by mutableIntStateOf(1)
 
     fun checkPlaytimeInit(context: Activity) {
-        // Workaround used to check if playtime init is done
-        Timer().schedule(object : TimerTask() {
-            override fun run() {
-                val inited = Playtime.isInitialized()
+        Playtime.setPlaytimeOptions(
+            PlaytimeOptions().setSDKHash(Config.ADJOE_SDK_HASH),
+            object : PlaytimeOptionsListener {
+                override fun onError(error: String) {
+                    Util.logVisible(context, error)
+                }
 
-                if (inited) {
-                    this.cancel()
+                override fun onSuccess() {
                     PlaytimeStudio.getPermissions(
                         context,
                         object : PlaytimePermissionsListener {
-                            override fun onReceived(p0: PlaytimePermissionsResponse) {
+                            override fun onReceived(response: PlaytimePermissionsResponse) {
                                 playtimeInit = true
                                 tosEnabled = SharedPreferencesRepository
                                     .getInstance(context)
                                     .getTosApproved()
                                 onboardingVisible = !(tosEnabled
-                                        && p0.permissions.isUsagePermissionAccepted)
+                                        && response.permissions.isUsagePermissionAccepted)
 
                                 if (tosEnabled) {
                                     onboardingStep = 2
                                 }
                             }
 
-                            override fun onError(p0: PlaytimeResponseError) {
-                                Util.logVisible(context, p0.message)
+                            override fun onError(error: PlaytimeResponseError) {
+                                Util.logVisible(context, error.error.message)
                             }
                         })
                 }
             }
-        }, 0, 200)
+        )
     }
 
     fun onApproveTOSFinished(permissions: PlaytimePermissions?) {

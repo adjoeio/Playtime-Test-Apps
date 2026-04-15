@@ -1,13 +1,13 @@
 {
-  "originHash" : "6be74d32ee81a08f0fb5a8c8cb5c49c5fb0f2c227145752c05424baf5538db16",
+  "originHash" : "2d70e4f36aa07ee2e563bec50eb27cc3fddfaca4917e92f0bd365a7d5ceb0102",
   "pins" : [
     {
       "identity" : "adjoe-monetize-spm",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/adjoeio/adjoe-monetize-spm",
       "state" : {
-        "revision" : "4f343a68431f30365468b2f70d24d552788a3c44",
-        "version" : "4.0.0-beta.3"
+        "revision" : "f97601a610dfbb9876e9e8aefb21cbae50c46085",
+        "version" : "4.3.0"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "8c0c0a8b49e080e54e5e328cc552821ff07cd341",
-        "version" : "1.2.1"
+        "revision" : "6675bc0ff86e61436e615df6fc5174e043e57924",
+        "version" : "1.4.1"
       }
     },
     {

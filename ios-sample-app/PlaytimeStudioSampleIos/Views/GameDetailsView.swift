@@ -82,15 +82,42 @@ struct GameDetailsView: View {
                            .background(Color.blue)
                            .cornerRadius(8)
                    }
-                    
                     .padding(.horizontal)
                     .padding(.top)
                     
+                    Button(action: {
+                        guard let campaign = game.campaign else {
+                            return
+                        }
+                        
+                        viewModel.openChatbotForCampaign(campaign: campaign)
+                     }) {
+                        Text("Need help with this campaing? Ask our chatbot!")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.red)
+                            .cornerRadius(8)
+                    }
+                     .padding(.horizontal)
+
                     Spacer(minLength: 40)
                 }
             }
             .navigationTitle(game.name)
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                do {
+                    guard let campaign = game.campaign else {
+                        return
+                    }
+                    
+                    try await PlaytimeStudio.executeEngagement(for: campaign, engagementType: .engaged)
+                } catch {
+                    print("Error executing engagement: \(error)")
+                }
+            }
         }
     }
 }

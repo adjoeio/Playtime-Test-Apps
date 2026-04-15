@@ -17,7 +17,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven(url = "https://releases.adjoe.io/maven")
-        maven(url = "https://pre-releases.adjoe.io/maven-snapshots")
     }
 }
 

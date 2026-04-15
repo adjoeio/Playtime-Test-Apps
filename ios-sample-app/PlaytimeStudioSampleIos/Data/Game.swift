@@ -3,7 +3,7 @@ import PlaytimeMonetize
 
 struct Game: Identifiable {
     let id: String?
-    let campaign: PlaytimeCampaign
+    let campaign: PlaytimeCampaign?
     let name: String
     let maxPerTask: Int
     let totalPoints: Int

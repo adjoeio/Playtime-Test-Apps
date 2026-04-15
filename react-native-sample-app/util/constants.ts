@@ -1,1 +1,2 @@
-export const USER_ID = 'E30BD2E6-39CD-47DA-BD38-85D4620C7F33';
+export const USER_ID = 'SOME_USER_ID';
+export const SDK_HASH = 'YOUR_SDK_HASH';

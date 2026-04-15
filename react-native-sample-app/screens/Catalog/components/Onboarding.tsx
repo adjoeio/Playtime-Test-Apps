@@ -25,7 +25,12 @@ export default function Onboarding({
     );
 
     const incrementStep = useCallback(() => {
-        setStep((prevStep) => prevStep + 1);
+        if (permissionsChecked) {
+            // Skip permissions screen
+            setStep(3);
+        } else {
+            setStep((prevStep) => prevStep + 1);
+        }
     }, []);
 
     const decrementStep = useCallback(() => {

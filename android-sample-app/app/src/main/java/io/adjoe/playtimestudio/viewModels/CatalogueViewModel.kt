@@ -9,18 +9,13 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import io.adjoe.playtimestudio.Config
 import io.adjoe.playtimestudio.InstalledGamesWorker
 import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.data.InstalledCampaign
-import io.adjoe.playtimestudio.data.InstalledCampaignDO
 import io.adjoe.playtimestudio.data.InstalledCampaingnsDO
 import io.adjoe.playtimestudio.repositories.MoshiRepository
 import io.adjoe.playtimestudio.repositories.WorkManagerRepository
@@ -29,6 +24,7 @@ import io.adjoe.sdk.internal.SharedPreferencesRepository
 import io.adjoe.sdk.studio.PlaytimeCampaign
 import io.adjoe.sdk.studio.PlaytimeCampaignsListener
 import io.adjoe.sdk.studio.PlaytimeCampaignsResponse
+import io.adjoe.sdk.studio.PlaytimeDeeplinkListener
 import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
 import kotlinx.coroutines.Dispatchers
@@ -94,19 +90,15 @@ class CatalogueViewModel : ViewModel() {
             .jsonToInstalledCampaigns(installedAppsString)
     }
 
-    fun getPlaytimeOptions(context: Context): PlaytimeOptions {
-        val adInfo = AdvertisingIdClient.getAdvertisingIdInfo(
-            context.applicationContext
-        )
-
-        return PlaytimeOptions().setUserId(adInfo.id)
+    fun getPlaytimeOptions(): PlaytimeOptions {
+        return PlaytimeOptions().setUserId(Config.ADJOE_USER_ID)
     }
 
     fun onGetCampaignsRecieved(
         p0: PlaytimeCampaignsResponse,
         localInstalledCampaigns: InstalledCampaingnsDO?
     ) {
-        allCampaigns = p0.campaigns
+        allCampaigns = p0.campaigns.toMutableList()
 
         // Filter installed campaigns that are saved locally
         val filteredCatalogCampaigns =
@@ -183,7 +175,7 @@ class CatalogueViewModel : ViewModel() {
 
     fun getCampaigns(context: Activity) {
         GlobalScope.launch(Dispatchers.IO) {
-            val options: PlaytimeOptions = getPlaytimeOptions(context)
+            val options: PlaytimeOptions = getPlaytimeOptions()
             loadingMyCampaigns = true
             loadingInstalledCampaigns = true
 
@@ -208,7 +200,7 @@ class CatalogueViewModel : ViewModel() {
                                 override fun onError(p0: PlaytimeResponseError) {
                                     Util.logVisible(
                                         context as Activity,
-                                        "Error getting campaigns: ${p0.message}"
+                                        "Error getting campaigns: ${p0.error.message}"
                                     )
                                     loadingInstalledCampaigns = false
                                 }
@@ -219,12 +211,59 @@ class CatalogueViewModel : ViewModel() {
                     override fun onError(p0: PlaytimeResponseError) {
                         Util.logVisible(
                             context as Activity,
-                            "Error getting campaigns: ${p0.message}"
+                            "Error getting campaigns: ${p0.error.message}"
                         )
                         loadingMyCampaigns = false
                     }
                 }
             )
         }
+    }
+
+    fun openChatbot(activity: Activity) {
+        PlaytimeStudio.openChatbot(
+            activity,
+            campaign = null,
+            listener = object : PlaytimeDeeplinkListener {
+                override fun onError(error: PlaytimeResponseError?) {
+                    Util.logVisible(activity, "Error opening chatbot: ${error?.error?.message}")
+                }
+
+                override fun onOpened() {
+                    Util.logVisible(activity, "Successfully opened chatbot")
+                }
+            }
+        )
+    }
+
+    fun showInstalledApps(activity: Activity) {
+        PlaytimeStudio.showInstalledApps(
+            activity,
+            listener = object : PlaytimeDeeplinkListener {
+                override fun onError(error: PlaytimeResponseError?) {
+                    Util.logVisible(activity, "Error showing installed apps: ${error?.error?.message}")
+                }
+
+                override fun onOpened() {
+                    Util.logVisible(activity, "Successfully opened installed apps")
+                }
+            }
+        )
+    }
+
+    fun deeplinkCampaign(activity: Activity, campaign: PlaytimeCampaign) {
+        PlaytimeStudio.showAppDetails(
+            activity,
+            campaign,
+            object : PlaytimeDeeplinkListener {
+                override fun onError(error: PlaytimeResponseError?) {
+                    Util.logVisible(activity, "Error opening campaign: ${error?.error?.message}")
+                }
+
+                override fun onOpened() {
+                    Util.logVisible(activity, "Successfully opened campaign")
+                }
+            }
+        )
     }
 }

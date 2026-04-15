@@ -1,5 +1,6 @@
 package io.adjoe.playtimestudio.ui
 
+import android.app.Activity
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -58,7 +59,8 @@ fun CampaignDetails(
     playerView: PlayerView,
     onFinish: () -> Unit,
     startCheckInstallWorker: () -> Unit,
-    baseContext: Context
+    baseContext: Context,
+    activity: Activity
 ) {
     Column(
         modifier = modifier
@@ -325,6 +327,15 @@ fun CampaignDetails(
                             override fun onError(p0: PlaytimeResponseError?) {}
                             override fun onAlreadyClicking() {}
                         })
+                }
+            )
+
+            // Catalog Support
+            DangerButton(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                text = "Need help with something? Ask our chatbot!",
+                onClick = {
+                    viewModel.openChatbot(activity)
                 }
             )
 

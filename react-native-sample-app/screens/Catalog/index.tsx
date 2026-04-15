@@ -7,12 +7,15 @@ import CatalogCampaign from './components/CatalogCampaign';
 import InstalledCampaign from './components/InstalledCampaign';
 import CampaignDetails from './components/CampaignDetails';
 import SafeArea from '../../components/SafeArea';
+import Button from '../../components/Button';
+import { theme } from '../../util/theme';
 
 export default function CatalogScreen() {
     const { 
         loading,
         activeTab,
         tosChecked,
+        openChatbot,
         setActiveTab,
         setTosChecked,
         clickedCampaign,
@@ -21,6 +24,7 @@ export default function CatalogScreen() {
         installedCampaigns,
         setClickedCampaign,
         setPermissionsChecked,
+        deeplinkInstalledApps,
      } = useCatalog();
 
     if (loading) {
@@ -71,6 +75,11 @@ export default function CatalogScreen() {
                 clickedCampaign={clickedCampaign}
                 setClickedCampaign={setClickedCampaign}
             />
+
+            <View style={[spacingStyles.padding, { backgroundColor: theme.blueGrey }]}>
+                <Button title="Need help with something? Ask our chatbot!" type="danger" onPress={openChatbot} />
+                <Button title="Deeplink to Installed Campaign" type="link" onPress={deeplinkInstalledApps} />
+            </View>
         </SafeArea>
     );
 }

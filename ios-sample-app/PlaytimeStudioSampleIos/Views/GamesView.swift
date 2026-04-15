@@ -40,10 +40,27 @@ struct GamesView: View {
                     .padding(.horizontal)
                 }
                 
+                HStack {
+                    Button("Deeplink installed apps") {
+                        viewModel.deeplinkInstalledApps()
+                    }
+                    
+                    Button(action: {
+                        viewModel.openChatbot()
+                     }) {
+                        Text("Open Chatbot")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.red)
+                            .cornerRadius(8)
+                    }
+                }
+                
                 if currentLoading {
                     ProgressView().controlSize(.large)
                 }
-                
+
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach(currentGames) { game in

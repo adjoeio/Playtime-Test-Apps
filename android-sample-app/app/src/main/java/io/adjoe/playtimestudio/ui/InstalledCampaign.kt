@@ -31,6 +31,7 @@ import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.data.InstalledCampaign
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeDeeplinkListener
 import io.adjoe.sdk.studio.PlaytimeOpenStoreListener
 import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
@@ -158,7 +159,7 @@ fun InstalledCampaign(
                             override fun onError(p0: PlaytimeResponseError?) {
                                 Util.logError(
                                     context as Activity,
-                                    "Error opening ${installedCampaign.campaign.appName}: ${p0?.message}"
+                                    "Error opening ${installedCampaign.campaign.appName}: ${p0?.error?.message}"
                                 )
                             }
 
@@ -169,6 +170,28 @@ fun InstalledCampaign(
                                 )
                             }
                         })
+                }
+            )
+
+            LinkButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Deeplink to WebCatalog",
+                onClick = {
+                    PlaytimeStudio.showInstalledApps(
+                        context as Activity,
+                        object : PlaytimeDeeplinkListener {
+                            override fun onError(error: PlaytimeResponseError?) {
+                                Util.logVisible(
+                                    context,
+                                    "Error opening campaign: ${error?.error?.message}"
+                                )
+                            }
+
+                            override fun onOpened() {
+                                Util.logVisible(context, "Successfully opened campaign")
+                            }
+                        }
+                    )
                 }
             )
         }

@@ -4,7 +4,7 @@ import {
     PlaytimeCashbackConfig, 
     PlaytimeRewardAction,
     PlaytimeRewardActionMultiplier,
-} from "react-native-adjoe-sdk/src-ts/PlaytimeStudio";
+} from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
 import { theme } from "./theme";
 
 export const getIsTimeBased = (campaign: PlaytimeCampaign): boolean => 

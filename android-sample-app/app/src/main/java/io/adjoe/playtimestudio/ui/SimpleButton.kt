@@ -32,7 +32,6 @@ fun SimpleButton(modifier: Modifier = Modifier, text: String = "", onClick: () -
             .clickable { onClick() }
             .padding(8.dp),
         contentAlignment = Alignment.Center,
-
         ) {
         Text(
             text = text,
@@ -54,6 +53,25 @@ fun LinkButton(modifier: Modifier = Modifier, text: String = "", onClick: () -> 
         Text(
             text = text,
             color = LocalStudioColorsPalette.current.PrimaryColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun DangerButton(modifier: Modifier = Modifier, text: String = "", onClick: () -> Unit = {}) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12))
+            .background(LocalStudioColorsPalette.current.Red400)
+            .clickable { onClick() }
+            .padding(8.dp),
+        contentAlignment = Alignment.Center,
+        ) {
+        Text(
+            text = text,
+            color = LocalStudioColorsPalette.current.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )

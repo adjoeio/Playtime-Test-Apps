@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Image, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { flexStyles, spacingStyles, textStyles } from "../../../util/style";
 import { getMaxReward, getTotalReward } from "../../../util/campaignsHelper";
-import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/PlaytimeStudio";
+import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
 import { PlaytimeStudio } from "react-native-adjoe-sdk";
 import Button from "../../../components/Button";
 
@@ -46,10 +46,36 @@ export default function CatalogCampaign({ campaign, setClickedCampaign }: Catalo
         }
     }, [campaign]);
 
+    const registerCampaignView = useCallback(async () => {
+        try {
+            await PlaytimeStudio.executeEngagement(campaign, 'default');
+        } catch (err) {
+            console.error(err);
+        }
+    }, [campaign]);
+
+    const registerCampaignClick = useCallback(async () => {
+        try {
+            await PlaytimeStudio.executeEngagement(campaign, 'engaged');
+            setClickedCampaign(campaign);
+        } catch (err) {
+            console.error(err);
+        }
+    }, [campaign]);
+
+    const deeplinkCampaign = useCallback(() => {
+        PlaytimeStudio.showAppDetails(campaign)
+            .catch((err) => console.error(err));
+    }, []);
+
+    useEffect(() => {
+        registerCampaignView();
+    }, []);
+
     return (
         <TouchableOpacity 
             activeOpacity={1}
-            onPress={() => setClickedCampaign(campaign)}
+            onPress={registerCampaignClick}
             style={[spacingStyles.marginBottom, styles.shadowContainer]}
         >
             <View style={[styles.container]}>
@@ -82,6 +108,7 @@ export default function CatalogCampaign({ campaign, setClickedCampaign }: Catalo
                     </View>
 
                     <Button title="Play Now" onPress={onPlayNowClicked} />
+                    <Button title="Deeplink" onPress={deeplinkCampaign} type="link" />
                 </View>
             </View>
         </TouchableOpacity>

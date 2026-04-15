@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import PlaytimeMonetize
 
 struct GameRow: View {
     let game: Game
@@ -44,6 +45,18 @@ struct GameRow: View {
                             .foregroundColor(.gray)
                     }
                 }
+                
+                Button(action: {
+                    guard let campaign = game.campaign else {
+                        return
+                    }
+                    
+                    Task {
+                        try await PlaytimeStudio.showAppDetails(campaign: campaign)
+                    }
+                }) {
+                   Text("Deeplink to web catalog")
+               }
             }
 
             Spacer()
@@ -52,5 +65,42 @@ struct GameRow: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
         .padding(.horizontal)
+        .task {
+            do {
+                guard let campaign = game.campaign else {
+                    return
+                }
+                
+                try await PlaytimeStudio.executeEngagement(for: campaign)
+            } catch {
+                print("Error executing engagement: \(error)")
+            }
+        }
     }
+}
+
+#Preview {
+    GameRow(
+        game: Game(
+            id: nil,
+            campaign: nil,
+            name: "Campaign",
+            maxPerTask: 0,
+            totalPoints: 0,
+            iconName: "",
+            iconURL: nil,
+            imageName: "",
+            landscapeImageURL: nil,
+            levels: [],
+            bonusLevels: [],
+            description: "",
+            featuredPosition: 0,
+            promoName: "",
+            promoDescription: "",
+            boostFactor: 0,
+            startTime: "",
+            endTime: "",
+            isCompleted: false
+        )
+    )
 }

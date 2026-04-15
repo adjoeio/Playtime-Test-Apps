@@ -1,5 +1,6 @@
 package io.adjoe.playtimestudio.viewModels
 
+import android.app.Activity
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -11,8 +12,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import io.adjoe.playtimestudio.CampaignHelper
 import io.adjoe.playtimestudio.DateHelper
+import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeDeeplinkListener
+import io.adjoe.sdk.studio.PlaytimeResponseError
+import io.adjoe.sdk.studio.PlaytimeStudio
 
 @RequiresApi(Build.VERSION_CODES.S)
 class CampaignDetailsViewModel() : ViewModel() {
@@ -138,5 +143,23 @@ class CampaignDetailsViewModel() : ViewModel() {
             return "Play ${DateHelper.secondsToMinutes(reward?.playDuration)}"
 
         return reward?.taskDescription.toString()
+    }
+
+    fun openChatbot(activity: Activity) {
+        activeCampaign?.let {
+            PlaytimeStudio.openChatbot(
+                activity,
+                campaign = it,
+                listener = object : PlaytimeDeeplinkListener {
+                    override fun onError(error: PlaytimeResponseError?) {
+                        Util.logVisible(activity, "Error opening chatbot: ${error?.error?.message}")
+                    }
+
+                    override fun onOpened() {
+                        Util.logVisible(activity, "Successfully opened chatbot")
+                    }
+                }
+            )
+        }
     }
 }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -34,6 +35,8 @@ import io.adjoe.playtimestudio.ui.theme.BorderColor
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.playtimestudio.viewModels.CatalogueViewModel
 import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeEngagementType
+import io.adjoe.sdk.studio.PlaytimeExecuteEngagementListener
 import io.adjoe.sdk.studio.PlaytimeOpenStoreListener
 import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
@@ -48,6 +51,24 @@ fun CatalogueCampaign(
 ) {
     val isTimeBased = CampaignHelper.getIsTimeBased(event)
     val maxReward = CampaignHelper.getMaxReward(event)
+
+    LaunchedEffect(true) {
+        PlaytimeStudio.executeEngagement(
+            context,
+            event,
+            PlaytimeEngagementType.DEFAULT,
+            object : PlaytimeExecuteEngagementListener {
+                override fun onAlreadyEngaging() {
+                    Util.logVisible(context as Activity, "On already engaging ${event.appName}")
+                }
+
+                override fun onError(error: PlaytimeResponseError?) {
+                    Util.logVisible(context as Activity, "Error executing engagement for ${event.appName}: ${error?.error?.message}")
+                }
+
+                override fun onFinished() { }
+        })
+    }
 
     Column(
         modifier = Modifier
@@ -169,7 +190,7 @@ fun CatalogueCampaign(
                             override fun onError(p0: PlaytimeResponseError?) {
                                 Util.logError(
                                     context as Activity,
-                                    "Error opening ${event.appName}: ${p0?.message}"
+                                    "Error opening ${event.appName}: ${p0?.error?.message}"
                                 )
                             }
 
@@ -180,6 +201,14 @@ fun CatalogueCampaign(
                                 )
                             }
                         })
+                }
+            )
+
+            LinkButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Deeplink to WebCatalog",
+                onClick = {
+                    viewModel.deeplinkCampaign(context as Activity, campaign = event)
                 }
             )
         }

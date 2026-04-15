@@ -6,9 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import io.adjoe.playtimestudio.data.InstalledCampaignDO
-import io.adjoe.playtimestudio.repositories.AdInfoRepository
 import io.adjoe.playtimestudio.repositories.MoshiRepository
 import io.adjoe.sdk.PlaytimeOptions
 import io.adjoe.sdk.internal.SharedPreferencesRepository
@@ -91,8 +89,7 @@ class InstalledGamesWorker(context: Context, params: WorkerParameters) : Worker(
 
             logVisible("checkApp=true , savedCampaign=$savedCampaign, minutePassed=$minutesPassed, appIsInstalled=$appIsInstalled")
 
-            val adInfo = AdInfoRepository.getInstance(applicationContext).getAdInfo()
-            val options: PlaytimeOptions = PlaytimeOptions().setUserId(adInfo.id)
+            val options: PlaytimeOptions = PlaytimeOptions().setUserId(Config.ADJOE_USER_ID)
 
             // Fetch the campaigns
             PlaytimeStudio.getInstalledCampaigns(
