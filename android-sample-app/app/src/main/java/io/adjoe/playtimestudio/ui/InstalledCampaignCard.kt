@@ -30,15 +30,15 @@ import io.adjoe.playtimestudio.CampaignHelper
 import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.data.InstalledCampaign
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
+import io.adjoe.sdk.PlaytimeException
 import io.adjoe.sdk.studio.PlaytimeCampaign
 import io.adjoe.sdk.studio.PlaytimeDeeplinkListener
 import io.adjoe.sdk.studio.PlaytimeOpenStoreListener
-import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InstalledCampaign(
+fun InstalledCampaignCard(
     context: Context,
     installedCampaign: InstalledCampaign,
     openCampaignDetails: (activeCampaign: PlaytimeCampaign) -> Unit,
@@ -135,7 +135,7 @@ fun InstalledCampaign(
 
         if (!isCompleted && !isExpired && installedCampaign.isInstalled) {
             ProgressBar(
-                rewardedCoins ?: 0,
+                rewardedCoins,
                 installedCampaign.campaign.eventConfig?.totalCoinsPossible ?: 1
             )
 
@@ -146,8 +146,8 @@ fun InstalledCampaign(
                 text = "Play Now",
                 onClick = {
                     PlaytimeStudio.openInStore(
-                        context,
-                        installedCampaign.campaign,
+                        campaign = installedCampaign.campaign,
+                        useInlineInstall = true,
                         object : PlaytimeOpenStoreListener {
                             override fun onFinished() {
                                 Util.logVisible(
@@ -156,10 +156,10 @@ fun InstalledCampaign(
                                 )
                             }
 
-                            override fun onError(p0: PlaytimeResponseError?) {
+                            override fun onError(error: PlaytimeException) {
                                 Util.logError(
                                     context as Activity,
-                                    "Error opening ${installedCampaign.campaign.appName}: ${p0?.error?.message}"
+                                    "Error opening ${installedCampaign.campaign.appName}: ${error.message}"
                                 )
                             }
 
@@ -177,13 +177,13 @@ fun InstalledCampaign(
                 modifier = Modifier.fillMaxWidth(),
                 text = "Deeplink to WebCatalog",
                 onClick = {
-                    PlaytimeStudio.showInstalledApps(
+                    PlaytimeStudio.showInstalledCampaigns(
                         context as Activity,
                         object : PlaytimeDeeplinkListener {
-                            override fun onError(error: PlaytimeResponseError?) {
+                            override fun onError(error: PlaytimeException) {
                                 Util.logVisible(
                                     context,
-                                    "Error opening campaign: ${error?.error?.message}"
+                                    "Error opening campaign: ${error.message}"
                                 )
                             }
 

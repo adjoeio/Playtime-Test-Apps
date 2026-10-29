@@ -1,7 +1,6 @@
 package io.adjoe.playtimestudio.ui
 
 import android.app.Activity
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -46,8 +45,8 @@ import androidx.media3.ui.PlayerView
 import coil.compose.rememberAsyncImagePainter
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.playtimestudio.viewModels.CampaignDetailsViewModel
+import io.adjoe.sdk.PlaytimeException
 import io.adjoe.sdk.studio.PlaytimeOpenStoreListener
-import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -58,8 +57,6 @@ fun CampaignDetails(
     player: Player,
     playerView: PlayerView,
     onFinish: () -> Unit,
-    startCheckInstallWorker: () -> Unit,
-    baseContext: Context,
     activity: Activity
 ) {
     Column(
@@ -315,16 +312,12 @@ fun CampaignDetails(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     PlaytimeStudio.openInStore(
-                        baseContext,
-                        viewModel.activeCampaign!!,
+                        campaign = viewModel.activeCampaign!!,
+                        useInlineInstall = true,
                         object : PlaytimeOpenStoreListener {
-                            override fun onFinished() {
-                                if (!viewModel.isInstalled) {
-                                    startCheckInstallWorker()
-                                }
-                            }
+                            override fun onFinished() { }
 
-                            override fun onError(p0: PlaytimeResponseError?) {}
+                            override fun onError(error: PlaytimeException) {}
                             override fun onAlreadyClicking() {}
                         })
                 }

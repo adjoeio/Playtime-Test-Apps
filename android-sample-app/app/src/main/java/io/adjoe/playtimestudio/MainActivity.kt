@@ -24,9 +24,9 @@ import io.adjoe.playtimestudio.ui.theme.PlaytimeStudioTheme
 import io.adjoe.playtimestudio.viewModels.CampaignDetailsViewModel
 import io.adjoe.playtimestudio.viewModels.CatalogueViewModel
 import io.adjoe.playtimestudio.viewModels.OnboardingViewModel
-import io.adjoe.sdk.studio.PlaytimeEngagementType
-import io.adjoe.sdk.studio.PlaytimeExecuteEngagementListener
-import io.adjoe.sdk.studio.PlaytimeResponseError
+import io.adjoe.sdk.PlaytimeException
+import io.adjoe.sdk.studio.PlaytimeExecuteImpressionListener
+import io.adjoe.sdk.studio.PlaytimeImpressionType
 import io.adjoe.sdk.studio.PlaytimeStudio
 
 class MainActivity : ComponentActivity() {
@@ -79,26 +79,17 @@ class MainActivity : ComponentActivity() {
                                 { step ->
                                     viewModel.onboardingStep = step
                                 },
-                                { permissions ->
-                                    viewModel.onApproveTOSFinished(permissions)
+                                {
+                                    viewModel.onOnboardingFinished()
                                 }
                             )
-                        }
-
-                        if (campaignDetailsViewModel.activeCampaign != null) {
+                        } else if (campaignDetailsViewModel.activeCampaign != null) {
                             CampaignDetails(
                                 Modifier.padding(innerPadding),
                                 campaignDetailsViewModel,
                                 player,
                                 playerView,
                                 onFinish = { campaignDetailsViewModel.activeCampaign = null },
-                                startCheckInstallWorker = {
-                                    catalogueViewModel.startCheckInstallWorker(
-                                        this,
-                                        campaignDetailsViewModel.activeCampaign!!
-                                    )
-                                },
-                                baseContext,
                                 activity = this@MainActivity
                             )
                         } else {
@@ -109,17 +100,21 @@ class MainActivity : ComponentActivity() {
                                 openCampaignDetails = {
                                     campaignDetailsViewModel.activeCampaign = it
 
-                                    PlaytimeStudio.executeEngagement(
-                                        context,
+                                    // It makes no sense to send an engaged click for a installed campaign.
+                                    if (catalogueViewModel.selectedTab == catalogueViewModel.tabs[1]) {
+                                        return@Catalogue
+                                    }
+
+                                    PlaytimeStudio.executeCampaignImpression(
                                         it,
-                                        PlaytimeEngagementType.ENGAGED,
-                                        object : PlaytimeExecuteEngagementListener {
+                                        PlaytimeImpressionType.ENGAGED,
+                                        object : PlaytimeExecuteImpressionListener {
                                             override fun onAlreadyEngaging() {
                                                 Util.logVisible(context as Activity, "On already engaging ${it.appName}")
                                             }
 
-                                            override fun onError(error: PlaytimeResponseError?) {
-                                                Util.logVisible(context as Activity, "Error executing engagement for ${it.appName}: ${error?.error?.message}")
+                                            override fun onError(error: PlaytimeException) {
+                                                Util.logVisible(context as Activity, "Error executing engagement for ${it.appName}: ${error.message}")
                                             }
 
                                             override fun onFinished() { }
@@ -135,4 +130,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

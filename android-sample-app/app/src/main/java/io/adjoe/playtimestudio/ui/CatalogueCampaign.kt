@@ -34,11 +34,11 @@ import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.ui.theme.BorderColor
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.playtimestudio.viewModels.CatalogueViewModel
+import io.adjoe.sdk.PlaytimeException
 import io.adjoe.sdk.studio.PlaytimeCampaign
-import io.adjoe.sdk.studio.PlaytimeEngagementType
-import io.adjoe.sdk.studio.PlaytimeExecuteEngagementListener
+import io.adjoe.sdk.studio.PlaytimeExecuteImpressionListener
+import io.adjoe.sdk.studio.PlaytimeImpressionType
 import io.adjoe.sdk.studio.PlaytimeOpenStoreListener
-import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -53,17 +53,16 @@ fun CatalogueCampaign(
     val maxReward = CampaignHelper.getMaxReward(event)
 
     LaunchedEffect(true) {
-        PlaytimeStudio.executeEngagement(
-            context,
+        PlaytimeStudio.executeCampaignImpression(
             event,
-            PlaytimeEngagementType.DEFAULT,
-            object : PlaytimeExecuteEngagementListener {
+            PlaytimeImpressionType.DEFAULT,
+            object : PlaytimeExecuteImpressionListener {
                 override fun onAlreadyEngaging() {
                     Util.logVisible(context as Activity, "On already engaging ${event.appName}")
                 }
 
-                override fun onError(error: PlaytimeResponseError?) {
-                    Util.logVisible(context as Activity, "Error executing engagement for ${event.appName}: ${error?.error?.message}")
+                override fun onError(error: PlaytimeException) {
+                    Util.logVisible(context as Activity, "Error executing engagement for ${event.appName}: ${error.message}")
                 }
 
                 override fun onFinished() { }
@@ -176,21 +175,20 @@ fun CatalogueCampaign(
                 text = "Play Now",
                 onClick = {
                     PlaytimeStudio.openInStore(
-                        context,
-                        event,
+                        campaign = event,
+                        useInlineInstall = true,
                         object : PlaytimeOpenStoreListener {
                             override fun onFinished() {
                                 Util.logVisible(
                                     context as Activity,
                                     "${event.appName} Opened Successfully"
                                 )
-                                viewModel.startCheckInstallWorker(context, event)
                             }
 
-                            override fun onError(p0: PlaytimeResponseError?) {
+                            override fun onError(error: PlaytimeException) {
                                 Util.logError(
                                     context as Activity,
-                                    "Error opening ${event.appName}: ${p0?.error?.message}"
+                                    "Error opening ${event.appName}: ${error.message}"
                                 )
                             }
 

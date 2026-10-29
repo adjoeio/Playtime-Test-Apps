@@ -127,6 +127,9 @@
 				B8EA899F2E54C62800108215 /* PlaytimeStudioSampleIos */,
 			);
 			name = PlaytimeStudioSampleIos;
+			packageProductDependencies = (
+				B8A754B22E670149004DCB28 /* PlaytimeMonetize */,
+			);
 			productName = PlaytimeStudioSampleIos;
 			productReference = B8EA899D2E54C62800108215 /* PlaytimeStudioSampleIos.app */;
 			productType = "com.apple.product-type.application";
@@ -201,7 +204,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B8D287EF2E65AB2000E68948 /* XCRemoteSwiftPackageReference "swift-identified-collections" */,
-				B873AE372E670E8C004C5A23 /* XCRemoteSwiftPackageReference "adjoe-monetize-spm" */,
+				B8A7548E2E67005F004DCB28 /* XCRemoteSwiftPackageReference "adjoe-monetize-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B8EA899E2E54C62800108215 /* Products */;
@@ -572,20 +575,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B873AE372E670E8C004C5A23 /* XCRemoteSwiftPackageReference "adjoe-monetize-spm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/adjoeio/adjoe-monetize-spm";
-			requirement = {
-				kind = exactVersion;
-				version = 4.3.0;
-			};
-		};
 		B8A7548E2E67005F004DCB28 /* XCRemoteSwiftPackageReference "adjoe-monetize-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/adjoeio/adjoe-monetize-spm";
 			requirement = {
 				kind = exactVersion;
-				version = "4.0.0-beta.2";
+				version = 5.0.0;
 			};
 		};
 		B8D287EF2E65AB2000E68948 /* XCRemoteSwiftPackageReference "swift-identified-collections" */ = {

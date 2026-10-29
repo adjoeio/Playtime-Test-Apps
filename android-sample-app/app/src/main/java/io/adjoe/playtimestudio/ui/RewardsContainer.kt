@@ -50,7 +50,7 @@ fun RewardsContainer(
             )
         }
         Text(
-            text = "${total} Total",
+            text = "$total Total",
             fontSize = 12.sp,
             color = LocalStudioColorsPalette.current.BlueGrey500
         )

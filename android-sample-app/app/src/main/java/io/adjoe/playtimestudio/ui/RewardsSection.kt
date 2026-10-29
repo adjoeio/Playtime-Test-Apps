@@ -25,12 +25,12 @@ import androidx.compose.ui.unit.sp
 import io.adjoe.playtimestudio.CampaignHelper
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.playtimestudio.viewModels.CampaignDetailsViewModel
-import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeRewardAction
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun RewardsSection(
-    rewards: List<PlaytimeCampaign.PlaytimeRewardAction>,
+    rewards: List<PlaytimeRewardAction>,
     viewModel: CampaignDetailsViewModel,
     sectionTitle: String? = "REWARDS"
 ) {

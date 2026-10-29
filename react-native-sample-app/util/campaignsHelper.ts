@@ -4,7 +4,7 @@ import {
     PlaytimeCashbackConfig, 
     PlaytimeRewardAction,
     PlaytimeRewardActionMultiplier,
-} from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
+} from "react-native-adjoe-sdk";
 import { theme } from "./theme";
 
 export const getIsTimeBased = (campaign: PlaytimeCampaign): boolean => 
@@ -57,7 +57,7 @@ export const getAllActions = (campaign: PlaytimeCampaign): RewardAction[] => {
         .map((l, i) => ({
             key: i,
             value: l.amount,
-            label: l.taskDescription,
+            label: l.taskDescription || '',
             reward: l,
         }));
 };
@@ -155,7 +155,7 @@ export const getBonusActions = (campaign: PlaytimeCampaign): RewardAction[] => {
         ...(sequentialTimeBoosted.map((a, i): RewardAction => ({
             key: i + 1,
             value: a.amount || 0,
-            label: isTimeBased ? `Play ${a.level} seconds` : a.taskDescription,
+            label: isTimeBased ? `Play ${a.level} seconds` : a.taskDescription || '',
             reward: a
         }))),
 
@@ -163,7 +163,7 @@ export const getBonusActions = (campaign: PlaytimeCampaign): RewardAction[] => {
         ...(bonusActions.map((a, i): RewardAction => ({
             key: i + 1 + sequentialTimeBoosted.length,
             value: a.amount || 0,
-            label: a.taskDescription,
+            label: a.taskDescription || '',
             reward: a
         })))
     ])

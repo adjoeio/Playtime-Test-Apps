@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { PlaytimeRewardActionMultiplier } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
+import { PlaytimeRewardActionMultiplier } from "react-native-adjoe-sdk";
 import { theme } from "../../../util/theme";
 import RewardsContainer from "../../../components/RewardsContainer";
 import { getMultiplierBackground, multiplierIsPending } from "../../../util/campaignsHelper";

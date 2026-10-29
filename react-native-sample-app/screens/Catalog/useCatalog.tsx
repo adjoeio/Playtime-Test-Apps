@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Playtime, { PlaytimeStudio } from 'react-native-adjoe-sdk';
-import { PlaytimeCampaign } from 'react-native-adjoe-sdk/src-ts/common/PlaytimeStudio';
+import Playtime, { AppCategory, PlaytimeCampaign, PlaytimeStudio } from 'react-native-adjoe-sdk';
 import { SDK_HASH, USER_ID } from '../../util/constants';
 import { Platform } from 'react-native';
 import { requestTrackingPermission } from 'react-native-tracking-transparency';
 
 export const useCatalog = () => {
+    const [refreshing, setRefreshing] = useState<boolean>(false);
     const [tosChecked, setTosChecked] = useState<boolean>();
     const [permissionsChecked, setPermissionsChecked] = useState<boolean>();
     const [activeTab, setActiveTab] = useState<'catalog' | 'installed'>('catalog');
@@ -20,29 +20,35 @@ export const useCatalog = () => {
 
     const checkUsagePermission = useCallback(async () => {
         if (Platform.OS === 'ios') {
+            try {
+                const val = await Playtime.getStatus();
+                setTosChecked(val.isTosAccepted);
+            } catch (err) {
+                console.error(err);
+            }
+
+            // Permissions are fetched using an external library
             const trackingStatus = await requestTrackingPermission();
             if (trackingStatus === 'authorized' || trackingStatus === 'unavailable') {
-                setTosChecked(true); // Auto TOS
                 setPermissionsChecked(true);
             } else {
-                setTosChecked(true); // Auto TOS
                 setPermissionsChecked(false);
             }
             return null;
         }
 
         try {
-            const val = await PlaytimeStudio.getPermissions();
-            setTosChecked(val.permissions.isTOSAccepted);
-            setPermissionsChecked(val.permissions.isUsagePermissionAccepted);
+            const val = await Playtime.getStatus();
+            setTosChecked(val.isTosAccepted);
+            setPermissionsChecked(val.isUsagePermissionAccepted || false);
         } catch (err) {
             console.error(err);
         }
     }, []);
 
-    const setPlaytimeOptions = useCallback(async () => {
+    const initPlaytime = useCallback(async () => {
         try {
-            await Playtime.setPlaytimeOptions({ userId: USER_ID, sdkHash: SDK_HASH });
+            await Playtime.initPlaytime({ userId: USER_ID, sdkHash: SDK_HASH });
         } catch (err) {
             console.error(err);
         }
@@ -51,15 +57,15 @@ export const useCatalog = () => {
     }, []);
 
     const setUpPlaytime = useCallback(async () => {
-        await setPlaytimeOptions();
+        await initPlaytime();
         await checkUsagePermission();
-    }, [checkUsagePermission, setPlaytimeOptions]);
+    }, [checkUsagePermission, initPlaytime]);
 
     const fetchCampaigns = useCallback(async () => {
         if (tosChecked && permissionsChecked) {
             try {
-                const apps = await PlaytimeStudio.getCampaigns({ userId: USER_ID, sdkHash: SDK_HASH });
-                const installedApps = await PlaytimeStudio.getInstalledCampaigns({ userId: USER_ID, sdkHash: SDK_HASH });
+                const apps = await PlaytimeStudio.getCampaigns({ category: AppCategory.BOTH });
+                const installedApps = await PlaytimeStudio.getInstalledCampaigns({ category: AppCategory.BOTH });
                 setCatalogCampaigns(apps.campaigns);
                 setInstalledCampaigns(installedApps.campaigns);
             } catch (err) {
@@ -67,6 +73,12 @@ export const useCatalog = () => {
             }
         }
     }, [tosChecked, permissionsChecked]);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchCampaigns();
+        setRefreshing(false);
+    }, [fetchCampaigns]);
 
     const openChatbot = useCallback(() => {
         try {
@@ -78,7 +90,7 @@ export const useCatalog = () => {
 
     const deeplinkInstalledApps = useCallback(() => {
         try {
-            PlaytimeStudio.showInstalledApps();
+            PlaytimeStudio.showInstalledCampaigns();
         } catch (err) {
             console.error(err);
         }
@@ -106,5 +118,7 @@ export const useCatalog = () => {
         clickedCampaign,
         setClickedCampaign,
         deeplinkInstalledApps,
+        refreshing,
+        onRefresh,
     };
 };

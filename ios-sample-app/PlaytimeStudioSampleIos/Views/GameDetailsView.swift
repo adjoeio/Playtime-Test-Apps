@@ -1,6 +1,6 @@
 import SwiftUI
 import Foundation
-import PlaytimeMonetize
+import PlaytimeSDK
 
 struct GameDetailsView: View {
     let game: Game
@@ -113,7 +113,10 @@ struct GameDetailsView: View {
                         return
                     }
                     
-                    try await PlaytimeStudio.executeEngagement(for: campaign, engagementType: .engaged)
+                    try await PlaytimeStudio.executeCampaignImpression(
+                        campaign: campaign,
+                        impressionType: .engaged
+                    )
                 } catch {
                     print("Error executing engagement: \(error)")
                 }

@@ -44,7 +44,6 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer.dash)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.ui.compose)
-    implementation(libs.androidx.work.runtime)
 
     implementation(libs.adjoe.sdk.android)
     implementation(libs.androidx.ui.viewbinding)

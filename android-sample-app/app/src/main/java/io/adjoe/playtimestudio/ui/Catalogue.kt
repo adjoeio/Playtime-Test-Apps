@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +37,7 @@ import io.adjoe.playtimestudio.viewModels.CatalogueViewModel
 import io.adjoe.sdk.studio.PlaytimeCampaign
 
 @RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Catalogue(
     modifier: Modifier = Modifier,
@@ -110,72 +113,79 @@ fun Catalogue(
         }
 
         // Catalog Campaigns
-        LazyColumn(
-            Modifier
+        PullToRefreshBox(
+            isRefreshing = viewModel.isRefreshing,
+            onRefresh = { viewModel.refreshCampaigns(context as Activity) },
+            modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)
-                .padding(16.dp)
         ) {
-            if (viewModel.selectedTab == viewModel.tabs[0]) {
-                if (viewModel.loadingMyCampaigns) {
-                    item { Loader() }
-                } else if (campaigns.isEmpty()) {
-                    item {
-                        EmptyCampaigns(
-                            text = "There are no games available to you at the moment." +
-                                    " Discover new games and continue earning when you come back tomorrow!",
-                        )
-                    }
-                } else {
-                    if (featuredCampaigns.isNotEmpty()) {
+            LazyColumn(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                if (viewModel.selectedTab == viewModel.tabs[0]) {
+                    if (viewModel.loadingMyCampaigns) {
+                        item { Loader() }
+                    } else if (campaigns.isEmpty()) {
                         item {
-                            Text(
-                                text = "Happening Now",
-                                fontSize = 18.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Bold,
+                            EmptyCampaigns(
+                                text = "There are no games available to you at the moment." +
+                                        " Discover new games and continue earning when you come back tomorrow!",
                             )
                         }
+                    } else {
+                        if (featuredCampaigns.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Happening Now",
+                                    fontSize = 18.sp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
 
-                        items(featuredCampaigns) {
-                            PromotionCampaign(it, openCampaignDetails)
+                            items(featuredCampaigns) {
+                                PromotionCampaign(it, openCampaignDetails)
+                            }
+
+                            item {
+                                Text(
+                                    text = "Your Selection",
+                                    fontSize = 18.sp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
                         }
 
-                        item {
-                            Text(
-                                text = "Your Selection",
-                                fontSize = 18.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Bold,
-                            )
+                        items(campaigns) {
+                            CatalogueCampaign(it, context, openCampaignDetails, viewModel)
                         }
-                    }
-
-                    items(campaigns) {
-                        CatalogueCampaign(it, context, openCampaignDetails, viewModel)
                     }
                 }
-            }
 
-            if (viewModel.selectedTab == viewModel.tabs[1]) {
-                if (viewModel.loadingInstalledCampaigns) {
-                    item { Loader() }
-                } else if (installedCampaigns.isEmpty()) {
-                    item {
-                        EmptyCampaigns(
-                            text = "You have not installed any apps yet. Explore the catalog of games" +
-                                    ", choose the ones you like the most and start earning!",
-                        )
-                    }
-                } else {
-                    items(installedCampaigns) {
-                        InstalledCampaign(context, it, openCampaignDetails)
+                if (viewModel.selectedTab == viewModel.tabs[1]) {
+                    if (viewModel.loadingInstalledCampaigns) {
+                        item { Loader() }
+                    } else if (installedCampaigns.isEmpty()) {
+                        item {
+                            EmptyCampaigns(
+                                text = "You have not installed any apps yet. Explore the catalog of games" +
+                                        ", choose the ones you like the most and start earning!",
+                            )
+                        }
+                    } else {
+                        items(installedCampaigns) {
+                            InstalledCampaignCard(context, it, openCampaignDetails)
+                        }
                     }
                 }
             }

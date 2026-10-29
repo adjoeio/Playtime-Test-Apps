@@ -21,11 +21,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.adjoe.playtimestudio.CampaignHelper
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
-import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeRewardActionMultiplier
 
 @Composable
 fun MultipliersSection(
-    multipliers: List<PlaytimeCampaign.PlaytimeRewardActionMultiplier>,
+    multipliers: List<PlaytimeRewardActionMultiplier>,
 ) {
     RewardsContainer(
         sectionTitle = "MULTIPLIERS",

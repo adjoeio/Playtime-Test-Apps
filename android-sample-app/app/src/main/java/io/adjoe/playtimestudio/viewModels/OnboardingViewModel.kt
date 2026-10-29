@@ -8,15 +8,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import io.adjoe.playtimestudio.Config
 import io.adjoe.playtimestudio.Util
+import io.adjoe.sdk.InitOptions
 import io.adjoe.sdk.Playtime
-import io.adjoe.sdk.PlaytimeOptions
-import io.adjoe.sdk.PlaytimeOptionsListener
-import io.adjoe.sdk.internal.SharedPreferencesRepository
-import io.adjoe.sdk.studio.PlaytimePermissions
-import io.adjoe.sdk.studio.PlaytimePermissionsListener
-import io.adjoe.sdk.studio.PlaytimePermissionsResponse
-import io.adjoe.sdk.studio.PlaytimeResponseError
-import io.adjoe.sdk.studio.PlaytimeStudio
+import io.adjoe.sdk.PlaytimeException
+import io.adjoe.sdk.PlaytimeInitListener
+import io.adjoe.sdk.PlaytimeStatus
 
 class OnboardingViewModel() : ViewModel() {
     var playtimeInit by mutableStateOf(false)
@@ -28,44 +24,43 @@ class OnboardingViewModel() : ViewModel() {
     var onboardingStep by mutableIntStateOf(1)
 
     fun checkPlaytimeInit(context: Activity) {
-        Playtime.setPlaytimeOptions(
-            PlaytimeOptions().setSDKHash(Config.ADJOE_SDK_HASH),
-            object : PlaytimeOptionsListener {
-                override fun onError(error: String) {
-                    Util.logVisible(context, error)
+        val currentStatus = Playtime.getStatus()
+
+        if (currentStatus.isInitialized) {
+            applyStatus(currentStatus)
+            return
+        }
+
+        Playtime.initPlaytime(
+            InitOptions(sdkHash = Config.ADJOE_SDK_HASH, userId = Config.ADJOE_USER_ID),
+            object : PlaytimeInitListener {
+                override fun onError(error: PlaytimeException) {
+                    Util.logVisible(context, error.message)
                 }
 
                 override fun onSuccess() {
-                    PlaytimeStudio.getPermissions(
-                        context,
-                        object : PlaytimePermissionsListener {
-                            override fun onReceived(response: PlaytimePermissionsResponse) {
-                                playtimeInit = true
-                                tosEnabled = SharedPreferencesRepository
-                                    .getInstance(context)
-                                    .getTosApproved()
-                                onboardingVisible = !(tosEnabled
-                                        && response.permissions.isUsagePermissionAccepted)
-
-                                if (tosEnabled) {
-                                    onboardingStep = 2
-                                }
-                            }
-
-                            override fun onError(error: PlaytimeResponseError) {
-                                Util.logVisible(context, error.error.message)
-                            }
-                        })
+                    applyStatus(Playtime.getStatus())
                 }
             }
         )
     }
 
-    fun onApproveTOSFinished(permissions: PlaytimePermissions?) {
-        onboardingVisible = false
+    private fun applyStatus(status: PlaytimeStatus) {
+        tosEnabled = status.isTosAccepted
+        playtimeInit = true
+        onboardingVisible = !(status.isTosAccepted && status.isUsagePermissionAccepted)
 
-        if (permissions != null) {
-            tosEnabled = permissions.isTOSAccepted
+        if (tosEnabled) {
+            onboardingStep = 2
+        }
+    }
+
+    fun onOnboardingFinished() {
+        val status = Playtime.getStatus()
+        tosEnabled = status.isTosAccepted
+
+        if (status.isUsagePermissionAccepted) {
+            onboardingVisible = false
         }
     }
 }

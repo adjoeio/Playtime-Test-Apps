@@ -15,7 +15,7 @@
     "moment": "^2.30.1",
     "react": "19.1.0",
     "react-native": "0.80.2",
-    "react-native-adjoe-sdk": "github:adjoeio/adjoe-react-native-sdk#v4.3.0",
+    "react-native-adjoe-sdk": "github:adjoeio/adjoe-react-native-sdk#v5.0.0",
     "react-native-safe-area-context": "^5.6.1",
     "react-native-tracking-transparency": "^0.1.2"
   },

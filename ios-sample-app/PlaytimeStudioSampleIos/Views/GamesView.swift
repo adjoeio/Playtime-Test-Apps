@@ -72,7 +72,10 @@ struct GamesView: View {
                     .padding(.top)
                 }
                 .task {
-                    await loadGames()
+                    await startup()
+                }
+                .refreshable {
+                    await refreshGames()
                 }
                 .onChange(of: selectedTab) {
                     Task {
@@ -82,6 +85,11 @@ struct GamesView: View {
 
             }
             .navigationTitle("Games")
+            .sheet(isPresented: $viewModel.showTosDrawer) {
+                TosDrawerView {
+                    await viewModel.acceptTos()
+                }
+            }
         }
     }
     
@@ -103,6 +111,18 @@ struct GamesView: View {
         }
     }
 
+    private func startup() async {
+        // Ensure the SDK is initialized and TOS status is known before loading.
+        if !viewModel.tosAccepted {
+            await viewModel.checkTosStatus()
+        }
+        // Only load games once TOS has been accepted; otherwise the drawer
+        // is shown and loading happens after the user accepts.
+        if viewModel.tosAccepted {
+            await loadGames()
+        }
+    }
+
     private func loadGames() async {
         switch selectedTab {
             case .catalog where viewModel.catalogGames.isEmpty:
@@ -111,6 +131,15 @@ struct GamesView: View {
                 await viewModel.fetchInstalledCampaigns()
             default:
                 break
+        }
+    }
+
+    private func refreshGames() async {
+        switch selectedTab {
+            case .catalog:
+                await viewModel.refreshCampaigns()
+            case .inProgress:
+                await viewModel.refreshInstalledCampaigns()
         }
     }
 }

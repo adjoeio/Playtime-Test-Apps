@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/adjoeio/adjoe-monetize-spm",
       "state" : {
-        "revision" : "f97601a610dfbb9876e9e8aefb21cbae50c46085",
-        "version" : "4.3.0"
+        "revision" : "5c227c8185b672da40b4b91eb93aa68a1b46839e",
+        "version" : "5.0.0"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "6675bc0ff86e61436e615df6fc5174e043e57924",
-        "version" : "1.4.1"
+        "revision" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
+        "version" : "1.6.0"
       }
     },
     {

@@ -31,12 +31,11 @@ import androidx.compose.ui.unit.sp
 import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.playtimestudio.ui.theme.PlaytimeStudioTheme
-import io.adjoe.sdk.internal.SharedPreferencesRepository
-import io.adjoe.sdk.studio.PlaytimePermissions
+import io.adjoe.sdk.PlaytimeException
 import io.adjoe.sdk.studio.PlaytimePermissionsListener
-import io.adjoe.sdk.studio.PlaytimePermissionsResponse
-import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
+import io.adjoe.sdk.studio.PlaytimeTosListener
+import io.adjoe.sdk.studio.TosConsentAction
 
 @Composable
 fun ApproveTOSStepOne(onNext: () -> Unit, onSkip: () -> Unit) {
@@ -88,7 +87,7 @@ fun ApproveTOSStepOne(onNext: () -> Unit, onSkip: () -> Unit) {
 
         SimpleButton(
             modifier = Modifier.fillMaxWidth(),
-            text = "Next",
+            text = "Accept TOS",
             onClick = onNext
         )
 
@@ -170,13 +169,13 @@ fun ApproveTOS(
     context: Activity,
     currentStep: Int,
     setStep: (step: Int) -> Unit = {},
-    onFinish: (permissions: PlaytimePermissions?) -> Unit = {}
+    onFinish: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = {
-            onFinish(null)
+            onFinish()
         },
         sheetState = sheetState
     ) {
@@ -200,11 +199,21 @@ fun ApproveTOS(
             ApproveTOSStepOne(
                 onNext = {
                     setStep(2)
-                    SharedPreferencesRepository
-                        .getInstance(context)
-                        .setTosApproved(true)
+                    PlaytimeStudio.updateTosConsent(
+                        action = TosConsentAction.ACCEPT,
+                        object : PlaytimeTosListener {
+                            override fun onError(error: PlaytimeException) {
+                                Util.logError(context, error.message.toString())
+                                onFinish()
+                            }
+
+                            override fun onUpdated() {
+                                onFinish()
+                            }
+                        }
+                    )
                 },
-                onSkip = { onFinish(null) }
+                onSkip = { onFinish() }
             )
         }
 
@@ -214,14 +223,13 @@ fun ApproveTOS(
                     PlaytimeStudio.showPermissionsPrompt(
                         context,
                         object : PlaytimePermissionsListener {
-                            override fun onReceived(p0: PlaytimePermissionsResponse) {
-                                Util.logVisible(context, p0.toString())
-                                onFinish(p0.permissions)
+                            override fun onReceived() {
+                                onFinish()
                             }
 
-                            override fun onError(p0: PlaytimeResponseError) {
-                                Util.logError(context, "Error: " + p0.toString())
-                                onFinish(null)
+                            override fun onError(error: PlaytimeException) {
+                                Util.logError(context, error.message.toString())
+                                onFinish()
                             }
                         }
                     )

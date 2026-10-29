@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { PlaytimeStudio } from 'react-native-adjoe-sdk';
+import { PlaytimeStudio, TosConsentAction } from 'react-native-adjoe-sdk';
 import { Platform, Text, View } from "react-native";
 import Drawer from "../../../components/Drawer";
 import { spacingStyles, textStyles } from "../../../util/style";
@@ -55,6 +55,7 @@ export default function Onboarding({
 
     const onAcceptTos = useCallback(async () => {
         try {
+            await PlaytimeStudio.updateTosConsent(TosConsentAction.ACCEPT);
             setTosChecked(true);
             incrementStep();
         } catch (error) {
@@ -88,7 +89,7 @@ export default function Onboarding({
                     </Text>
 
                     <View style={[spacingStyles.marginTop, spacingStyles.marginBottom]}>
-                        <Button title="Next" onPress={onAcceptTos} />
+                        <Button title="Accept TOS" onPress={onAcceptTos} />
                     </View>
                     <Button title="Skip" onPress={incrementStep} type="link" />
                 </View>

@@ -1,6 +1,6 @@
 import SwiftUI
 import Foundation
-import PlaytimeMonetize
+import PlaytimeSDK
 
 struct GameRow: View {
     let game: Game
@@ -34,16 +34,16 @@ struct GameRow: View {
                     .font(.subheadline)
                     .foregroundColor(.gray)
                 
-                if let _ = game.clickedAt {
-                    if game.clickedDuration! >= Game.Constants.postbackTimeout {
-                        Text("Postback won't come!")
-                            .font(.subheadline)
-                            .foregroundColor(.red)
-                    } else {
-                        Text("Waiting for postback...")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
+                if game.isExpired {
+                    Text("Installation failed!\nYou won't get rewarded for this campaign.")
+                        .font(.subheadline)
+                        .foregroundColor(.red)
+                }
+
+                if game.isPending {
+                    Text("Verifying installation...")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
                 }
                 
                 Button(action: {
@@ -52,7 +52,7 @@ struct GameRow: View {
                     }
                     
                     Task {
-                        try await PlaytimeStudio.showAppDetails(campaign: campaign)
+                        try await PlaytimeStudio.showCampaignDetails(campaign: campaign)
                     }
                 }) {
                    Text("Deeplink to web catalog")
@@ -71,7 +71,7 @@ struct GameRow: View {
                     return
                 }
                 
-                try await PlaytimeStudio.executeEngagement(for: campaign)
+                try await PlaytimeStudio.executeCampaignImpression(campaign: campaign)
             } catch {
                 print("Error executing engagement: \(error)")
             }
@@ -89,18 +89,17 @@ struct GameRow: View {
             totalPoints: 0,
             iconName: "",
             iconURL: nil,
-            imageName: "",
             landscapeImageURL: nil,
             levels: [],
             bonusLevels: [],
             description: "",
-            featuredPosition: 0,
             promoName: "",
             promoDescription: "",
             boostFactor: 0,
             startTime: "",
             endTime: "",
-            isCompleted: false
+            isExpired: false,
+            isPending: false
         )
     )
 }

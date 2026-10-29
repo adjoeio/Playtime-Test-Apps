@@ -1,8 +1,9 @@
 package io.adjoe.playtimestudio.data
 
-import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeRewardAction
+import io.adjoe.sdk.studio.PlaytimeCashbackConfig
 
 data class BonusAction(
-    val rewardConfig: PlaytimeCampaign.PlaytimeRewardAction? = null,
-    val cashback: PlaytimeCampaign.PlaytimeCashbackConfig? = null
+    val rewardConfig: PlaytimeRewardAction? = null,
+    val cashback: PlaytimeCashbackConfig? = null
 )

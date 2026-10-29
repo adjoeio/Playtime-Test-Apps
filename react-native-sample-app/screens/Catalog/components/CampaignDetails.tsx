@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { Modal, Text, View } from "react-native";
-import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
+import { PlaytimeCampaign } from "react-native-adjoe-sdk";
 import {
     campaignIsExpired,
     campaignIsInstalled,

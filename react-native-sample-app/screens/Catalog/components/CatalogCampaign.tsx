@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { Image, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { flexStyles, spacingStyles, textStyles } from "../../../util/style";
 import { getMaxReward, getTotalReward } from "../../../util/campaignsHelper";
-import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
+import { PlaytimeCampaign, PlaytimeImpressionType } from "react-native-adjoe-sdk";
 import { PlaytimeStudio } from "react-native-adjoe-sdk";
 import Button from "../../../components/Button";
 
@@ -40,7 +40,7 @@ export default function CatalogCampaign({ campaign, setClickedCampaign }: Catalo
 
     const onPlayNowClicked = useCallback(async () => {
         try {
-            await PlaytimeStudio.openInStore(campaign)
+            await PlaytimeStudio.openInStore(campaign, true)
         } catch (err) {
             console.error(err);
         }
@@ -48,7 +48,7 @@ export default function CatalogCampaign({ campaign, setClickedCampaign }: Catalo
 
     const registerCampaignView = useCallback(async () => {
         try {
-            await PlaytimeStudio.executeEngagement(campaign, 'default');
+            await PlaytimeStudio.executeCampaignImpression(campaign, PlaytimeImpressionType.DEFAULT);
         } catch (err) {
             console.error(err);
         }
@@ -56,7 +56,7 @@ export default function CatalogCampaign({ campaign, setClickedCampaign }: Catalo
 
     const registerCampaignClick = useCallback(async () => {
         try {
-            await PlaytimeStudio.executeEngagement(campaign, 'engaged');
+            await PlaytimeStudio.executeCampaignImpression(campaign, PlaytimeImpressionType.ENGAGED);
             setClickedCampaign(campaign);
         } catch (err) {
             console.error(err);
@@ -64,7 +64,7 @@ export default function CatalogCampaign({ campaign, setClickedCampaign }: Catalo
     }, [campaign]);
 
     const deeplinkCampaign = useCallback(() => {
-        PlaytimeStudio.showAppDetails(campaign)
+        PlaytimeStudio.showCampaignDetails(campaign)
             .catch((err) => console.error(err));
     }, []);
 

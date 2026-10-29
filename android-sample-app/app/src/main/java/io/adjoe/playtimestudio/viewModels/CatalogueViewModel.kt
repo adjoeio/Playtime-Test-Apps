@@ -1,7 +1,6 @@
 package io.adjoe.playtimestudio.viewModels
 
 import android.app.Activity
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
@@ -10,30 +9,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.workDataOf
-import io.adjoe.playtimestudio.Config
-import io.adjoe.playtimestudio.InstalledGamesWorker
+import androidx.lifecycle.viewModelScope
 import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.data.InstalledCampaign
-import io.adjoe.playtimestudio.data.InstalledCampaingnsDO
-import io.adjoe.playtimestudio.repositories.MoshiRepository
-import io.adjoe.playtimestudio.repositories.WorkManagerRepository
-import io.adjoe.sdk.PlaytimeOptions
-import io.adjoe.sdk.internal.SharedPreferencesRepository
+import io.adjoe.sdk.AppCategory
+import io.adjoe.sdk.CampaignOptions
+import io.adjoe.sdk.InstalledCampaignOptions
+import io.adjoe.sdk.PlaytimeException
 import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeCampaignStatus
 import io.adjoe.sdk.studio.PlaytimeCampaignsListener
 import io.adjoe.sdk.studio.PlaytimeCampaignsResponse
 import io.adjoe.sdk.studio.PlaytimeDeeplinkListener
-import io.adjoe.sdk.studio.PlaytimeResponseError
 import io.adjoe.sdk.studio.PlaytimeStudio
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
 
 @RequiresApi(Build.VERSION_CODES.O)
 class CatalogueViewModel : ViewModel() {
@@ -53,171 +45,121 @@ class CatalogueViewModel : ViewModel() {
     var loadingMyCampaigns by mutableStateOf(true)
     var loadingInstalledCampaigns by mutableStateOf(true)
 
-    fun startCheckInstallWorker(context: Activity, campaign: PlaytimeCampaign) {
-        // If clicked game is already in installed campaigns, do nothing
-        installedCampaigns.find { it.campaign.campaignUUID == campaign.campaignUUID } ?: return
+    // Pull-to-refresh state. Reflects whether a user-initiated refresh is in flight.
+    var isRefreshing by mutableStateOf(false)
+        private set
 
-        val installedGamesWorker = OneTimeWorkRequestBuilder<InstalledGamesWorker>()
-            .setInputData(workDataOf(InstalledGamesWorker.CAMPAIGN_UUID to campaign.campaignUUID))
-            .build()
-
-        val installedCampaign =
-            InstalledCampaign(campaign = campaign, isInstalled = false, isExpired = false)
-
-        // add game to installed campaigns
-        installedCampaigns.add(installedCampaign)
-        // remove game from catalog campaigns
-        campaigns.remove(campaign)
-        featuredCampaigns.remove(campaign)
-
-        WorkManagerRepository
-            .getInstance(context)
-            .observeInstalledGamesWorker(
-                campaign,
-                onFinish = {
-                    getCampaigns(context)
-                }
-            )
+    // Clears the refresh indicator once both campaign lists have finished loading.
+    private fun updateRefreshingState() {
+        if (!loadingMyCampaigns && !loadingInstalledCampaigns) {
+            isRefreshing = false
+        }
     }
 
-    fun getLocalInstalledCampaigns(context: Context): InstalledCampaingnsDO? {
-        val installedAppsString = SharedPreferencesRepository
-            .getInstance(context)
-            .getInstalledApps()
-
-        return MoshiRepository
-            .getInstance()
-            .jsonToInstalledCampaigns(installedAppsString)
+    fun getCampaignOptions(): CampaignOptions {
+        return CampaignOptions(category = AppCategory.BOTH)
     }
 
-    fun getPlaytimeOptions(): PlaytimeOptions {
-        return PlaytimeOptions().setUserId(Config.ADJOE_USER_ID)
+    fun getInstalledCampaignOptions(): InstalledCampaignOptions {
+        return InstalledCampaignOptions(category = AppCategory.BOTH)
     }
 
     fun onGetCampaignsRecieved(
-        p0: PlaytimeCampaignsResponse,
-        localInstalledCampaigns: InstalledCampaingnsDO?
+        response: PlaytimeCampaignsResponse,
     ) {
-        allCampaigns = p0.campaigns.toMutableList()
-
-        // Filter installed campaigns that are saved locally
-        val filteredCatalogCampaigns =
-            p0.campaigns.filter { c ->
-                localInstalledCampaigns?.campaigns?.find {
-                    it.campaignUUID == c.campaignUUID
-                } == null
-            }
+        allCampaigns = response.campaigns.toMutableList()
         campaigns =
-            filteredCatalogCampaigns.filter { c -> c.promotion == null }
+            allCampaigns.filter { c -> c.promotion == null }
                 .toMutableStateList()
         _campaignsListFlow.value = campaigns
 
-        featuredCampaigns = filteredCatalogCampaigns
+        featuredCampaigns = allCampaigns
             .filter { c -> c.promotion != null }
             .sortedBy { it.featuredPosition }
             .toMutableStateList()
+
         _featuredListFlow.value = featuredCampaigns
 
         loadingMyCampaigns = false
+        updateRefreshingState()
     }
 
     fun onGetInstalledCampaignsRecieved(
-        p0: PlaytimeCampaignsResponse,
-        localInstalledCampaigns: InstalledCampaingnsDO?
+        response: PlaytimeCampaignsResponse,
     ) {
-        // Filter local installed campaigns
-        val filteredLocalInstalledCampaigns =
-            localInstalledCampaigns?.campaigns?.filter { c ->
-                p0.campaigns.find {
-                    it.campaignUUID == c.campaignUUID
-                } == null
-            }
-
         installedCampaigns = mutableStateListOf()
 
         // Add campaigns we get from SDK
-        p0.campaigns.forEach { it ->
+        response.campaigns.forEach { it ->
             installedCampaigns.add(
                 InstalledCampaign(
                     it,
-                    isInstalled = true,
-                    isExpired = false
+                    isInstalled = it.status == PlaytimeCampaignStatus.INSTALLED,
+                    isExpired = it.status == PlaytimeCampaignStatus.FAILED
                 )
             )
-        }
-
-        // Added local installed campaigns
-        filteredLocalInstalledCampaigns?.forEach { campaign ->
-            val _campaign =
-                allCampaigns.find {
-                    it.campaignUUID == campaign.campaignUUID
-                }
-            if (_campaign != null) {
-                val minutesPassed = Duration.between(
-                    Instant.parse(campaign.timestamp),
-                    Instant.now()
-                ).toMinutes()
-                val expired = minutesPassed >= InstalledGamesWorker.POSTBACK_EXPIRATION
-                installedCampaigns.add(
-                    InstalledCampaign(
-                        _campaign,
-                        false,
-                        expired
-                    )
-                )
-            }
         }
 
         _installedCampaignsListFlow.value = installedCampaigns
         loadingInstalledCampaigns = false
+        updateRefreshingState()
     }
 
-
     fun getCampaigns(context: Activity) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val options: PlaytimeOptions = getPlaytimeOptions()
+        viewModelScope.launch(Dispatchers.IO) {
+            val campaignOptions = getCampaignOptions()
+            val installedCampaignOptions = getInstalledCampaignOptions()
+
             loadingMyCampaigns = true
             loadingInstalledCampaigns = true
 
-            val localInstalledCampaigns = getLocalInstalledCampaigns(context)
-
             PlaytimeStudio.getCampaigns(
-                context,
-                options,
+                campaignOptions,
                 object : PlaytimeCampaignsListener {
-                    override fun onReceived(p0: PlaytimeCampaignsResponse) {
-                        onGetCampaignsRecieved(p0, localInstalledCampaigns)
-
-                        PlaytimeStudio.getInstalledCampaigns(
-                            context,
-                            options,
-                            object : PlaytimeCampaignsListener {
-                                @RequiresApi(Build.VERSION_CODES.O)
-                                override fun onReceived(p0: PlaytimeCampaignsResponse) {
-                                    onGetInstalledCampaignsRecieved(p0, localInstalledCampaigns)
-                                }
-
-                                override fun onError(p0: PlaytimeResponseError) {
-                                    Util.logVisible(
-                                        context as Activity,
-                                        "Error getting campaigns: ${p0.error.message}"
-                                    )
-                                    loadingInstalledCampaigns = false
-                                }
-                            }
-                        )
+                    override fun onReceived(response: PlaytimeCampaignsResponse) {
+                        onGetCampaignsRecieved(response)
                     }
 
-                    override fun onError(p0: PlaytimeResponseError) {
+                    override fun onError(error: PlaytimeException) {
                         Util.logVisible(
                             context as Activity,
-                            "Error getting campaigns: ${p0.error.message}"
+                            "Error getting campaigns: ${error.message}"
                         )
                         loadingMyCampaigns = false
+                        updateRefreshingState()
+                    }
+                }
+            )
+
+            PlaytimeStudio.getInstalledCampaigns(
+                installedCampaignOptions,
+                object : PlaytimeCampaignsListener {
+                    @RequiresApi(Build.VERSION_CODES.O)
+                    override fun onReceived(response: PlaytimeCampaignsResponse) {
+                        onGetInstalledCampaignsRecieved(response)
+                    }
+
+                    override fun onError(error: PlaytimeException) {
+                        Util.logVisible(
+                            context as Activity,
+                            "Error getting campaigns: ${error.message}"
+                        )
+                        loadingInstalledCampaigns = false
+                        updateRefreshingState()
                     }
                 }
             )
         }
+    }
+
+    /**
+     * Triggered by the pull-to-refresh gesture. Shows the refresh indicator and
+     * re-fetches both campaign lists. The indicator is cleared once both requests
+     * complete (see [updateRefreshingState]).
+     */
+    fun refreshCampaigns(context: Activity) {
+        isRefreshing = true
+        getCampaigns(context)
     }
 
     fun openChatbot(activity: Activity) {
@@ -225,8 +167,8 @@ class CatalogueViewModel : ViewModel() {
             activity,
             campaign = null,
             listener = object : PlaytimeDeeplinkListener {
-                override fun onError(error: PlaytimeResponseError?) {
-                    Util.logVisible(activity, "Error opening chatbot: ${error?.error?.message}")
+                override fun onError(error: PlaytimeException) {
+                    Util.logVisible(activity, "Error opening chatbot: ${error.message}")
                 }
 
                 override fun onOpened() {
@@ -237,11 +179,11 @@ class CatalogueViewModel : ViewModel() {
     }
 
     fun showInstalledApps(activity: Activity) {
-        PlaytimeStudio.showInstalledApps(
+        PlaytimeStudio.showInstalledCampaigns(
             activity,
             listener = object : PlaytimeDeeplinkListener {
-                override fun onError(error: PlaytimeResponseError?) {
-                    Util.logVisible(activity, "Error showing installed apps: ${error?.error?.message}")
+                override fun onError(error: PlaytimeException) {
+                    Util.logVisible(activity, "Error showing installed apps: ${error.message}")
                 }
 
                 override fun onOpened() {
@@ -252,12 +194,12 @@ class CatalogueViewModel : ViewModel() {
     }
 
     fun deeplinkCampaign(activity: Activity, campaign: PlaytimeCampaign) {
-        PlaytimeStudio.showAppDetails(
+        PlaytimeStudio.showCampaignDetails(
             activity,
             campaign,
             object : PlaytimeDeeplinkListener {
-                override fun onError(error: PlaytimeResponseError?) {
-                    Util.logVisible(activity, "Error opening campaign: ${error?.error?.message}")
+                override fun onError(error: PlaytimeException) {
+                    Util.logVisible(activity, "Error opening campaign: ${error.message}")
                 }
 
                 override fun onOpened() {

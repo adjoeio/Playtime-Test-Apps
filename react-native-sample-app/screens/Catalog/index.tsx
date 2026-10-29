@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
 import { flexStyles, spacingStyles } from '../../util/style';
 import { useCatalog } from './useCatalog';
 import Onboarding from './components/Onboarding';
@@ -11,7 +11,7 @@ import Button from '../../components/Button';
 import { theme } from '../../util/theme';
 
 export default function CatalogScreen() {
-    const { 
+    const {
         loading,
         activeTab,
         tosChecked,
@@ -25,15 +25,17 @@ export default function CatalogScreen() {
         setClickedCampaign,
         setPermissionsChecked,
         deeplinkInstalledApps,
-     } = useCatalog();
+        refreshing,
+        onRefresh,
+    } = useCatalog();
 
     if (loading) {
         return (
             <View style={[flexStyles.flex1, flexStyles.justfiyCenter]}>
-                <View 
+                <View
                     style={[
-                        flexStyles.flex1, 
-                        flexStyles.justfiyCenter, 
+                        flexStyles.flex1,
+                        flexStyles.justfiyCenter,
                         flexStyles.row
                     ]}>
                     <ActivityIndicator size="large" />
@@ -44,7 +46,7 @@ export default function CatalogScreen() {
 
     return (
         <SafeArea>
-            <Onboarding 
+            <Onboarding
                 tosChecked={tosChecked}
                 setTosChecked={setTosChecked}
                 permissionsChecked={permissionsChecked}
@@ -53,25 +55,33 @@ export default function CatalogScreen() {
 
             <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <ScrollView style={[flexStyles.flex1]}>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
+                style={[flexStyles.flex1]}
+            >
                 <View style={[spacingStyles.padding]}>
                     {activeTab === 'catalog' ? catalogCampaigns.map((campaign) => (
-                        <CatalogCampaign 
-                            setClickedCampaign={setClickedCampaign} 
-                            campaign={campaign} 
+                        <CatalogCampaign
+                            setClickedCampaign={setClickedCampaign}
+                            campaign={campaign}
                             key={campaign.campaignUUID}
                         />
                     )) : installedCampaigns.map((campaign) => (
-                        <InstalledCampaign 
-                            key={campaign.campaignUUID} 
-                            campaign={campaign} 
-                            setClickedCampaign={setClickedCampaign} 
+                        <InstalledCampaign
+                            key={campaign.campaignUUID}
+                            campaign={campaign}
+                            setClickedCampaign={setClickedCampaign}
                         />
                     ))}
                 </View>
             </ScrollView>
 
-            <CampaignDetails 
+            <CampaignDetails
                 clickedCampaign={clickedCampaign}
                 setClickedCampaign={setClickedCampaign}
             />

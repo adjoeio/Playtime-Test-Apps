@@ -1,5 +1,5 @@
 [versions]
-adjoeSdkAndroid = "4.3.0"
+adjoeSdkAndroid = "5.0.0"
 agp = "8.11.0"
 coilCompose = "2.7.0"
 kotlin = "2.0.21"

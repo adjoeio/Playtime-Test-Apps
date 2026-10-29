@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Color
 import io.adjoe.playtimestudio.data.BonusAction
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
 import io.adjoe.sdk.studio.PlaytimeCampaign
+import io.adjoe.sdk.studio.PlaytimeRewardAction
+import io.adjoe.sdk.studio.PlaytimeRewardActionMultiplier
 import java.time.Duration
 import java.time.Instant
 
@@ -15,7 +17,7 @@ object CampaignHelper {
         return campaign?.campaignType == "offerwall"
     }
 
-    fun getRewardedActions(campaign: PlaytimeCampaign?): List<PlaytimeCampaign.PlaytimeRewardAction>? {
+    fun getRewardedActions(campaign: PlaytimeCampaign?): List<PlaytimeRewardAction>? {
         val isTimeBased = getIsTimeBased(campaign)
 
         return if (isTimeBased)
@@ -23,7 +25,7 @@ object CampaignHelper {
         else campaign?.eventConfig?.sequentialActions?.filter { !it.rewardedAt.isNullOrEmpty() }
     }
 
-    fun getAllActions(campaign: PlaytimeCampaign?): List<PlaytimeCampaign.PlaytimeRewardAction>? {
+    fun getAllActions(campaign: PlaytimeCampaign?): List<PlaytimeRewardAction>? {
         val isTimeBased = getIsTimeBased(campaign)
 
         return if (isTimeBased)
@@ -32,7 +34,7 @@ object CampaignHelper {
         else campaign?.eventConfig?.sequentialActions?.filter { !rewardIsTimeBoosted(it) }
     }
 
-    fun getAllMultipliers(campaign: PlaytimeCampaign?): List<PlaytimeCampaign.PlaytimeRewardActionMultiplier>? {
+    fun getAllMultipliers(campaign: PlaytimeCampaign?): List<PlaytimeRewardActionMultiplier>? {
         return campaign?.eventConfig?.multipliersActions
     }
 
@@ -52,7 +54,7 @@ object CampaignHelper {
         else campaign?.eventConfig?.sequentialActions?.maxBy { d -> d.amount }?.amount
     }
 
-    fun filterTimeBoostedEvents(it: PlaytimeCampaign.PlaytimeRewardAction): Boolean {
+    fun filterTimeBoostedEvents(it: PlaytimeRewardAction): Boolean {
         it.timedCoinsDuration?.let {
             return it > 0
         }
@@ -61,7 +63,7 @@ object CampaignHelper {
     }
 
     fun getBonusActions(campaign: PlaytimeCampaign?): List<BonusAction>? {
-        val sequentialTimeBoosted: List<PlaytimeCampaign.PlaytimeRewardAction>?
+        val sequentialTimeBoosted: List<PlaytimeRewardAction>?
             = campaign?.eventConfig?.sequentialActions?.filter { filterTimeBoostedEvents(it) }
         val bonusActionsToReturn = mutableListOf<BonusAction>()
         val bonusActions = campaign?.eventConfig?.bonusActions?.filter { !it.name.isNullOrEmpty() }
@@ -119,7 +121,7 @@ object CampaignHelper {
         ) else null
     }
 
-    fun rewardIsTimeBoosted(reward: PlaytimeCampaign.PlaytimeRewardAction): Boolean {
+    fun rewardIsTimeBoosted(reward: PlaytimeRewardAction): Boolean {
         reward.timedCoinsDuration?.let {
             return it > 0
         }
@@ -127,7 +129,7 @@ object CampaignHelper {
         return false
     }
 
-    fun rewardIsRepeatable(reward: PlaytimeCampaign.PlaytimeRewardAction): Boolean {
+    fun rewardIsRepeatable(reward: PlaytimeRewardAction): Boolean {
         reward.rewardsCount?.let {
             return it > 1
         }
@@ -135,7 +137,7 @@ object CampaignHelper {
         return false
     }
 
-    fun multiplierIsPending(multiplier: PlaytimeCampaign.PlaytimeRewardActionMultiplier): Boolean {
+    fun multiplierIsPending(multiplier: PlaytimeRewardActionMultiplier): Boolean {
         if (multiplier.status.isNullOrEmpty()) {
             return true
         }
@@ -144,7 +146,7 @@ object CampaignHelper {
     }
 
     @Composable
-    fun getMultiplierBackground(multiplier: PlaytimeCampaign.PlaytimeRewardActionMultiplier): Color {
+    fun getMultiplierBackground(multiplier: PlaytimeRewardActionMultiplier): Color {
         if (multiplierIsPending(multiplier)) {
             return LocalStudioColorsPalette.current.BlueGrey500
         }

@@ -1,10 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { Image, StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { PlaytimeStudio } from "react-native-adjoe-sdk";
+import { PlaytimeStudio, PlaytimeCampaign, PlaytimeCampaignStatus } from "react-native-adjoe-sdk";
 import { flexStyles, spacingStyles, textStyles } from "../../../util/style";
 import { getRewardedCoins, getTotalReward } from "../../../util/campaignsHelper";
 import ProgressBar from "../../../components/ProgressBar";
-import { PlaytimeCampaign } from "react-native-adjoe-sdk/src-ts/common/PlaytimeStudio";
 import Button from "../../../components/Button";
 
 type InstalledCampaignProps = {
@@ -33,7 +32,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default function InstalledCampaign({ 
+export default function InstalledCampaign({
     campaign,
     setClickedCampaign
 }: InstalledCampaignProps) {
@@ -49,22 +48,22 @@ export default function InstalledCampaign({
     }, [campaign]);
 
     const deeplinkCampaign = useCallback(async () => {
-        PlaytimeStudio.showAppDetails(campaign)
+        PlaytimeStudio.showCampaignDetails(campaign)
             .catch((err) => console.error(err));
     }, [campaign]);
 
     return (
         <TouchableOpacity
             activeOpacity={1}
-            onPress={() => setClickedCampaign(campaign)} 
+            onPress={() => setClickedCampaign(campaign)}
             style={[spacingStyles.marginBottom, styles.shadowContainer]}
         >
             <View style={[styles.container]}>
                 <View style={[spacingStyles.padding, flexStyles.row]}>
                     {campaign?.iconImage && (
-                        <Image 
+                        <Image
                             style={[styles.image, spacingStyles.marginRight]}
-                            source={{ uri: campaign?.iconImage || '' }} 
+                            source={{ uri: campaign?.iconImage || '' }}
                         />
                     )}
 
@@ -86,9 +85,24 @@ export default function InstalledCampaign({
                             <ProgressBar percentage={currentReward / totalReward * 100} />
                         </View>
 
-                        <Button title="Play Now" onPress={onPlayNowClicked} />
-
-                        <Button type="link" title="Deeplink to WebCatalog" onPress={deeplinkCampaign} />
+                        {campaign.status === PlaytimeCampaignStatus.INSTALLED ? (
+                            <>
+                                <Button title="Play Now" onPress={onPlayNowClicked} />
+                                <Button type="link" title="Deeplink to WebCatalog" onPress={deeplinkCampaign} />
+                            </>
+                        ) : campaign.status === PlaytimeCampaignStatus.FAILED ? (
+                            <>
+                                <Text style={[textStyles.textBold, spacingStyles.marginBottom]}>
+                                    We can't reward you for this app. Feel free to continue using the app.
+                                </Text>
+                            </>
+                        ) : campaign.status === PlaytimeCampaignStatus.PENDING ? (
+                            <>
+                                <Text style={[textStyles.textBold, spacingStyles.marginBottom]}>
+                                    Veryfying installation...
+                                </Text>
+                            </>
+                        ) : null}
                     </View>
                 </View>
             </View>

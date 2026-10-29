@@ -1,5 +1,5 @@
 import Foundation
-import PlaytimeMonetize
+import PlaytimeSDK
 import IdentifiedCollections
 
 extension GameLevel {
@@ -29,11 +29,6 @@ extension GameLevel {
 }
 
 extension Game {
-    enum Constants {
-        static let postbackTimeout = 20 // timeout of postback in minutes
-        static let timerInterval = 60.0
-    }
-    
     static func convertCampaignToGame(_ campaign: PlaytimeCampaign) -> Game {
         let levels = campaign.eventConfig?.sequentialActions ?? []
         
@@ -92,54 +87,61 @@ extension Game {
             totalPoints: allGameLevels.map { $0.points }.reduce(0, +),
             iconName: "gamecontroller",
             iconURL: iconURL,
-            imageName:"gamecontroller2",
             landscapeImageURL: landscapeURL,
             levels: rewards,
             bonusLevels: bonusLevels,
             description: campaign.appDescription,
-            featuredPosition: campaign.featuredPosition,
             promoName: campaign.promotion?.name,
             promoDescription: campaign.promotion?.promotionDescription,
             boostFactor: campaign.promotion?.boostFactor,
             startTime: campaign.promotion?.startTime,
             endTime: campaign.promotion?.endTime,
-            isCompleted: campaign.isCompleted,
+            isExpired: campaign.status == .failed,
+            isPending: campaign.status == .pending,
         )
     }
     
     static func getCampaigns() async throws -> IdentifiedArrayOf<Game> {
-        let options = try getOptions()
-        let response = try await PlaytimeStudio.getCampaigns(options: options)
+        let options = getCampaignOptions()
+        let response = try await PlaytimeStudio.getCampaigns(campaignOptions: options)
         let games = response.campaigns.map(convertCampaignToGame)
         return IdentifiedArrayOf(uniqueElements: games)
     }
     
     static func getInstalledCampaigns() async throws -> IdentifiedArrayOf<Game> {
-        let options = try getOptions()
+        let options = getInstalledCampaignOptions()
         let response = try await PlaytimeStudio.getInstalledCampaigns(options: options)
         let games = response.campaigns.map(convertCampaignToGame)
         return IdentifiedArrayOf(uniqueElements: games)
     }
     
-    static func getOptions() throws -> PlaytimeOptions {
-        let options = PlaytimeOptionsBuilder()
-            .setUserId(Config.userId.rawValue)
-            .setUserProfile(
-                PlaytimeUserProfileBuilder()
-                    .setGender(PlaytimeGender.male)
-                    .setBirthday(Date.isoStringToDate("2025-06-26T14:45:30.123Z"))
-                    .build()
-             )
-            .setParams(
-                PlaytimeParamsBuilder()
-                    .setUAChannel("uaChannel")
-                    .setUANetwork("uaNetwork")
-                    .setUASubPublisherCleartext("uaSubPublisherCleartext")
-                    .setUASubPublisherEncrypted("uaSubPublisherEncrypted")
-                    .setPlacement("placement")
-                    .build()
-            )
-            .build()
-        return options
+    static func getInitOptions() -> InitOptions {
+        return InitOptions(
+            sdkHash: Config.sdkHash.rawValue,
+            userId: Config.userId.rawValue,
+            userProfile: PlaytimeUserProfile(
+                gender: PlaytimeGender.male,
+                birthday: Date.isoStringToDate("2025-06-26T14:45:30.123Z")
+            ),
+            extensions: nil,
+            language: nil,
+            uaNetwork: "uaNetwork",
+            uaChannel: "uaChannel",
+            uaCampaignName: nil,
+            country: nil
+        )
+    }
+    
+    static func getCampaignOptions() -> CampaignOptions {
+        return CampaignOptions(
+            placement: nil,
+            category: AppCategory.both,
+            displayFormat: nil,
+            promotionTag: nil
+        )
+    }
+    
+    static func getInstalledCampaignOptions() -> InstalledCampaignOptions {
+        return InstalledCampaignOptions(category: AppCategory.both)
     }
 }

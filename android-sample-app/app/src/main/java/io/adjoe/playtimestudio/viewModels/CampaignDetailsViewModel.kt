@@ -14,9 +14,10 @@ import io.adjoe.playtimestudio.CampaignHelper
 import io.adjoe.playtimestudio.DateHelper
 import io.adjoe.playtimestudio.Util
 import io.adjoe.playtimestudio.ui.theme.LocalStudioColorsPalette
+import io.adjoe.sdk.PlaytimeException
 import io.adjoe.sdk.studio.PlaytimeCampaign
 import io.adjoe.sdk.studio.PlaytimeDeeplinkListener
-import io.adjoe.sdk.studio.PlaytimeResponseError
+import io.adjoe.sdk.studio.PlaytimeRewardAction
 import io.adjoe.sdk.studio.PlaytimeStudio
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -32,7 +33,7 @@ class CampaignDetailsViewModel() : ViewModel() {
     val video by derivedStateOf { activeCampaign?.video?.landscape }
     var showVideo by mutableStateOf(false)
         private set
-    var openedRewards by mutableStateOf<List<PlaytimeCampaign.PlaytimeRewardAction?>?>(null)
+    var openedRewards by mutableStateOf<List<PlaytimeRewardAction?>?>(null)
         private set
     var rewardSectionsExpanded by mutableStateOf(false)
         private set
@@ -46,7 +47,7 @@ class CampaignDetailsViewModel() : ViewModel() {
         rewardSectionsExpanded = !rewardSectionsExpanded
     }
 
-    fun onRewardsClick(rewards: List<PlaytimeCampaign.PlaytimeRewardAction?>?) {
+    fun onRewardsClick(rewards: List<PlaytimeRewardAction?>?) {
         if (isInstalled) {
             openedRewards = rewards
         }
@@ -85,8 +86,8 @@ class CampaignDetailsViewModel() : ViewModel() {
 
     @Composable
     fun getRewardColor(
-        reward: PlaytimeCampaign.PlaytimeRewardAction?,
-        prevReward: PlaytimeCampaign.PlaytimeRewardAction?
+        reward: PlaytimeRewardAction?,
+        prevReward: PlaytimeRewardAction?
     ): Color {
         if (isInstalled) {
             if (!reward?.rewardedAt.isNullOrEmpty()) {
@@ -112,8 +113,8 @@ class CampaignDetailsViewModel() : ViewModel() {
     }
 
     fun getRewardText(
-        reward: PlaytimeCampaign.PlaytimeRewardAction?,
-        prevReward: PlaytimeCampaign.PlaytimeRewardAction?
+        reward: PlaytimeRewardAction?,
+        prevReward: PlaytimeRewardAction?
     ): String? {
         if (isInstalled) {
             if (!reward?.rewardedAt.isNullOrEmpty()) {
@@ -138,7 +139,7 @@ class CampaignDetailsViewModel() : ViewModel() {
         return null
     }
 
-    fun getRewardLabel(reward: PlaytimeCampaign.PlaytimeRewardAction?): String {
+    fun getRewardLabel(reward: PlaytimeRewardAction?): String {
         if (isTimeBased)
             return "Play ${DateHelper.secondsToMinutes(reward?.playDuration)}"
 
@@ -151,8 +152,8 @@ class CampaignDetailsViewModel() : ViewModel() {
                 activity,
                 campaign = it,
                 listener = object : PlaytimeDeeplinkListener {
-                    override fun onError(error: PlaytimeResponseError?) {
-                        Util.logVisible(activity, "Error opening chatbot: ${error?.error?.message}")
+                    override fun onError(error: PlaytimeException) {
+                        Util.logVisible(activity, "Error opening chatbot: ${error.message}")
                     }
 
                     override fun onOpened() {

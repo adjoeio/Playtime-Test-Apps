@@ -1,4 +1,5 @@
 source 'https://github.com/adjoeio/PlaytimeSpecExternal.git'
+source 'https://cdn.cocoapods.org/'
 
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
@@ -33,5 +34,31 @@ target 'RNStudioSampleApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Workaround for fmt 11.0.2 + Xcode 26 Clang consteval error:
+    # "Call to consteval function ... is not a constant expression" in
+    # fmt/format-inl.h. A -DFMT_USE_CONSTEVAL=0 build flag does NOT work
+    # because fmt/base.h unconditionally re-defines the macro. Instead we
+    # patch base.h to force FMT_USE_CONSTEVAL to 0, disabling consteval
+    # format-string checking (falls back to runtime checking).
+    fmt_base = File.join(__dir__, 'Pods', 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      contents = File.read(fmt_base)
+      marker = '// FMT_CONSTEVAL_PATCHED'
+      unless contents.include?(marker)
+        # Anchor immediately AFTER the consteval detection #if/#elif/#endif
+        # block so our override is the final word (the block uses #elif and
+        # would otherwise re-evaluate to 1 under Xcode 26 Clang).
+        anchor = "#if FMT_USE_CONSTEVAL\n#  define FMT_CONSTEVAL consteval"
+        override = "#undef FMT_USE_CONSTEVAL  #{marker}\n#define FMT_USE_CONSTEVAL 0\n\n#{anchor}"
+        raise "fmt base.h: consteval anchor not found (fmt version changed?)" unless contents.include?(anchor)
+        contents = contents.sub(anchor, override)
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, contents)
+        Pod::UI.puts "[fmt patch] Forced FMT_USE_CONSTEVAL=0 in base.h".green
+      else
+        Pod::UI.puts "[fmt patch] base.h already patched".yellow
+      end
+    end
   end
 end
